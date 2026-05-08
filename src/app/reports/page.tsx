@@ -131,7 +131,7 @@ export default function ReportsPage() {
       supabase.from('projects').select('*'),
     ]);
 
-    const entries: TimeEntry[] = entriesRes.data || [];
+    const entries: Pick<TimeEntry, 'project_id' | 'date' | 'hours'>[] = entriesRes.data || [];
     const projects: Project[] = projectsRes.data || [];
 
     // Build chart data
