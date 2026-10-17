@@ -1,13 +1,10 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import Navigation from '@/components/Navigation';
-
-const inter = Inter({ subsets: ['latin'] });
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'TimerFM',
-  description: 'Time tracking made simple',
+  title: "daily.fm — A little, every day",
+  description:
+    "A quiet place to see your progress. Meaningful work and a life well lived.",
 };
 
 export default function RootLayout({
@@ -16,13 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-gray-950 text-gray-100 min-h-screen`}>
-        <Navigation />
-        <main className="pl-0 md:pl-60 pb-16 md:pb-0 min-h-screen">
-          {children}
-        </main>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   );
 }

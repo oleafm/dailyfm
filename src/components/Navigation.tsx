@@ -24,7 +24,7 @@ export default function Navigation() {
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 bg-gray-900 border-r border-gray-800 flex-col z-50">
         <div className="flex items-center gap-2 px-6 py-5 border-b border-gray-800">
           <Clock className="w-6 h-6 text-amber-500" />
-          <span className="text-xl font-bold text-white">TimerFM</span>
+          <span className="text-xl font-bold text-white">daily.fm</span>
         </div>
         <nav className="flex flex-col gap-1 p-3 mt-2">
           {navLinks.map(({ href, label, icon: Icon }) => (
