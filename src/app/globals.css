@@ -238,23 +238,23 @@ input[type="range"] {
   margin: 30px 13px 25px;
 }
 .sidebar-thought > svg {
-  width: 100px;
-  height: 75px;
-  margin-left: -10px;
+  width: 110px;
+  height: 85px;
+  margin-left: -24px;
   margin-bottom: 10px;
 }
 .sidebar-thought p {
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.25;
   font-weight: 700;
-  letter-spacing: -0.8px;
+  letter-spacing: -0.5px;
 }
 .sidebar-thought > span {
   display: block;
   color: #929292;
   font-size: 7px;
   letter-spacing: 1.1px;
-  margin-top: 15px;
+  margin-top: 6px;
 }
 .prototype-label {
   display: flex;
@@ -2491,7 +2491,7 @@ h1 em {
     font-size: 10px;
   }
   .sidebar-thought p {
-    font-size: 20px;
+    font-size: 16px;
   }
   .profile {
     margin-left: -10px;

@@ -471,7 +471,7 @@ export default function PrototypeApp({
         </div>
         <div className="sidebar-bottom">
           <div className="sidebar-thought">
-            <Illustration kind="orbit" />
+            <Illustration kind="growth" />
             <p>
               Small steps.
               <br />
