@@ -56,6 +56,7 @@ import {
 } from "./Views";
 import { Modal, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
+import SproutCelebration, { CelebrationKind } from "./SproutCelebration";
 
 type Dialog = {
   type:
@@ -100,6 +101,11 @@ export default function PrototypeApp({
     [now, setNow] = useState(Date.now());
   const [sessionNote, setSessionNote] = useState(""),
     [storageWarning, setStorageWarning] = useState(false);
+  const [celebration, setCelebration] = useState<{ kind: CelebrationKind; message?: string; id: number } | null>(null);
+  function celebrate(kind: CelebrationKind, message?: string) {
+    setToast("");
+    setCelebration((previous) => ({ kind, message, id: (previous?.id ?? 0) + 1 }));
+  }
   const [mobileMenu, setMobileMenu] = useState(false);
   const [focusVisible, setFocusVisible] = useState(true);
   const focusRef = useRef<HTMLDivElement>(null);
@@ -180,8 +186,12 @@ export default function PrototypeApp({
   const todays = state.activities.filter((a) => a.date === today);
   const checkIn = state.checkIns.find((c) => c.date === today);
   const close = () => setDialog(null);
-  const announce = (message: string) => {
-    setToast(message);
+  const announce = (message: string, kind: CelebrationKind | false = "task") => {
+    if (kind) celebrate(kind, message);
+    else {
+      setCelebration(null);
+      setToast(message);
+    }
     close();
   };
   function navigate(
@@ -287,7 +297,7 @@ export default function PrototypeApp({
       ],
     }));
     setTimer(null);
-    announce("Time well spent. Your session is in your story.");
+    announce(`Saved ${clock(elapsed)} of focus. Time well spent.`, "session");
   }
   function toggleTask(id: string) {
     const task = state.tasks.find((t) => t.id === id);
@@ -318,13 +328,18 @@ export default function PrototypeApp({
             },
           ],
     }));
-    setToast(
-      task.completed
-        ? "A little more room to work on this."
-        : "One small thing, moved forward.",
-    );
+    if (!task.completed) celebrate("task", `Completed “${task.title}”. One small step forward.`);
+    else {
+      setCelebration(null);
+      setToast("A little more room to work on this.");
+    }
   }
   function updateMilestone(projectId: string, id?: string, title?: string) {
+    const project = state.projects.find((p) => p.id === projectId);
+    if (!project) return;
+    const milestone = project.milestones.find((m) => m.id === id);
+    if (id && !milestone) return;
+    if (!id && !title?.trim()) return;
     setState((s) => {
       const project = s.projects.find((p) => p.id === projectId);
       if (!project) return s;
@@ -367,10 +382,16 @@ export default function PrototypeApp({
         ),
       };
     });
+    if (!id) celebrate("task", `Milestone added to ${project.name}. A next step to aim for.`);
+    else if (milestone && !milestone.completed) celebrate("task", `Milestone complete: ${milestone.title}.`);
+    else {
+      setCelebration(null);
+      setToast("Milestone reopened. Take it at your pace.");
+    }
   }
   function addActivity(activity: Activity) {
     setState((s) => ({ ...s, activities: [...s.activities, activity] }));
-    announce("A little piece of your day, kept.");
+    announce(`Logged “${activity.title}”. A little piece of your day, kept.`);
   }
   const selectedChallenge = state.challenges.find((c) => c.id === dialog?.id);
   const selectedMemory = state.completions.find((c) => c.id === dialog?.id);
@@ -531,6 +552,9 @@ export default function PrototypeApp({
           >
             <Plus size={16} />
             <span>Log a little something</span>
+          </button>
+          <button className="icon-button sprout-preview" aria-label="Preview sprout celebration" title="Preview a little celebration" onClick={() => celebrate("session")}>
+            <Sprout size={19} />
           </button>
         </header>
         <main id="main-content" className="page-content">
@@ -729,6 +753,7 @@ export default function PrototypeApp({
           </button>
         </div>
       )}
+      {celebration && <SproutCelebration key={celebration.id} kind={celebration.kind} message={celebration.message} onClose={() => setCelebration(null)} />}
       <div
         className={`toast ${toast ? "visible" : ""}`}
         role="status"
@@ -760,7 +785,7 @@ export default function PrototypeApp({
             onSave={(task) => {
               setState((s) => ({ ...s, tasks: [...s.tasks, task] }));
               setArea(task.area);
-              announce("A small intention, ready when you are.");
+              announce(`Added “${task.title}”. A small intention, ready when you are.`);
             }}
           />
         </Modal>
@@ -809,7 +834,7 @@ export default function PrototypeApp({
                   },
                 ],
               }));
-              announce("You showed up for yourself. That counts.");
+              announce(checkIn ? "Daily check-in updated. A little more room for you." : "Daily check-in saved. You showed up for yourself.", "checkin");
             }}
           />
         </Modal>
@@ -824,7 +849,7 @@ export default function PrototypeApp({
             onSave={(project) => {
               setState((s) => ({ ...s, projects: [...s.projects, project] }));
               navigate("projects", project.id);
-              announce("A new space for something meaningful.");
+              announce(`Created ${project.name}. A new space for something meaningful.`);
             }}
           />
         </Modal>
@@ -841,7 +866,7 @@ export default function PrototypeApp({
                 ...s,
                 challenges: [...s.challenges, challenge],
               }));
-              announce("An invitation to try something a little different.");
+              announce("Invitation created. Something new to look forward to.");
             }}
           />
         </Modal>
@@ -873,7 +898,7 @@ export default function PrototypeApp({
                   },
                 ],
               }));
-              announce("A little first. A lasting memory.");
+              announce(`Saved “${entry.title}”. A new experience, a lasting memory.`);
             }}
           />
         </Modal>
@@ -983,7 +1008,7 @@ export default function PrototypeApp({
               type="button"
               onClick={() => {
                 setTimer(null);
-                announce("A little breathing room. Session discarded.");
+                announce("A little breathing room. Session discarded.", false);
               }}
             >
               Discard this session
