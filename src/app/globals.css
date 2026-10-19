@@ -9,8 +9,8 @@
   --secondary: #686868;
   --muted: #888888;
   --line: #e8e8e8;
-  --accent: #6f87bb;
-  --accent-soft: #edf0f7;
+  --accent: #c8f176;
+  --accent-soft: #f4fbe4;
   --radius: 22px;
   --font:
     -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
@@ -87,7 +87,7 @@ input[type="range"] {
   accent-color: var(--ink);
 }
 ::selection {
-  background: #dce3f1;
+  background: var(--accent-soft);
 }
 .loading-screen {
   min-height: 100vh;
