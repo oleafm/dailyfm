@@ -78,7 +78,7 @@ export default function ActivityGrid({
         <div className="grid-chart-body">
           <div
             className="month-labels"
-            style={{ gridTemplateColumns: `repeat(${weeks}, 1fr)` }}
+            style={{ gridTemplateColumns: `repeat(${weeks}, calc((100% - (var(--grid-columns) - 1) * var(--grid-gap)) / var(--grid-columns)))` }}
           >
             {days
               .filter((_, i) => i % 7 === 0)
@@ -92,7 +92,7 @@ export default function ActivityGrid({
           </div>
           <div
             className="contribution-grid"
-            style={{ gridTemplateColumns: `repeat(${weeks}, 1fr)` }}
+            style={{ gridTemplateColumns: `repeat(${weeks}, calc((100% - (var(--grid-columns) - 1) * var(--grid-gap)) / var(--grid-columns)))` }}
           >
             {days.map((d) => (
               <button

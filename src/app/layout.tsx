@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "daily.fm — A little, every day",
+  title: "to.daily — A little, every day",
   description:
     "A quiet place to see your progress. Meaningful work and a life well lived.",
 };

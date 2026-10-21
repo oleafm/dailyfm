@@ -411,13 +411,13 @@ export default function PrototypeApp({
         <button
           className="brand"
           onClick={() => navigate("today")}
-          aria-label="daily.fm home"
+          aria-label="to.daily home"
         >
           <span className="brand-mark" aria-hidden="true">
-            d.
+            .d
           </span>
           <span>
-            daily<span className="brand-period">.fm</span>
+            to<span className="brand-period">.daily</span>
             <small>A little, every day.</small>
           </span>
         </button>
@@ -521,7 +521,7 @@ export default function PrototypeApp({
               Your space<span>/</span>
               {navigation.find((n) => n.view === view)?.label}
             </span>
-            <span className="mobile-brand">daily.fm</span>
+            <span className="mobile-brand">to.daily</span>
           </div>
           <div className="area-switch" aria-label="Choose an area">
             <button
@@ -698,7 +698,7 @@ export default function PrototypeApp({
             />
           )}
           <footer className="page-footer">
-            <span className="footer-brand">daily.fm</span>
+            <span className="footer-brand">to.daily</span>
             <p>Evidence, not judgment.</p>
             <span>
               Made for a life in progress.

@@ -9,8 +9,8 @@
   --secondary: #686868;
   --muted: #888888;
   --line: #e8e8e8;
-  --accent: #c8f176;
-  --accent-soft: #f4fbe4;
+  --accent: #B6D929;
+  --accent-soft: #f0f6d4;
   --radius: 22px;
   --font:
     -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
@@ -152,7 +152,7 @@ input[type="range"] {
   font-size: 9px;
   font-weight: 400;
   letter-spacing: 0.1px;
-  margin-top: 5px;
+  margin-top: 1px;
 }
 .nav-caption {
   font-size: 9px;
@@ -383,7 +383,7 @@ input[type="range"] {
   padding: 35px 42px 0;
 }
 .page-intro {
-  margin-bottom: 34px;
+  margin-bottom: 22px;
 }
 .eyebrow {
   color: #858585;
@@ -394,7 +394,7 @@ input[type="range"] {
   text-transform: uppercase;
 }
 .page-intro .eyebrow {
-  margin-bottom: 17px;
+  margin-bottom: 13px;
 }
 .eyebrow .live-dot {
   margin-right: 8px;
@@ -428,7 +428,7 @@ h1 em {
   color: #777;
   font-size: 13px;
   line-height: 1.8;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 .today-intro {
   display: flex;
@@ -559,12 +559,15 @@ h1 em {
   grid-row: 5;
 }
 .grid-chart-body {
+  --grid-gap: 4px;
+  --grid-columns: 26;
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
 }
 .month-labels {
   display: grid;
-  gap: 4px;
+  gap: var(--grid-gap);
   color: #8b8b8b;
   font-size: 9px;
   margin-bottom: 10px;
@@ -575,7 +578,7 @@ h1 em {
   display: grid;
   grid-template-rows: repeat(7, 1fr);
   grid-auto-flow: column;
-  gap: 4px;
+  gap: var(--grid-gap);
 }
 .day-square {
   width: 100%;
@@ -1087,8 +1090,8 @@ h1 em {
 }
 .area-label {
   border-radius: 5px;
-  background: #f1f1f1;
-  color: #777;
+  background: var(--accent);
+  color: var(--ink);
   font-size: 9px;
   line-height: 1;
   padding: 5px 7px;
@@ -1552,6 +1555,9 @@ h1 em {
   margin-top: 9px;
 }
 .filter-tabs {
+  background: #e8e8e8;
+  border-radius: 28px;
+  padding: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2324,8 +2330,8 @@ h1 em {
   .focus-card {
     padding: 30px;
   }
-  .contribution-grid {
-    gap: 5px;
+  .grid-chart-body {
+    --grid-gap: 5px;
   }
   .focus-card h2 {
     font-size: 31px;
@@ -2654,12 +2660,12 @@ h1 em {
     padding: 28px 22px 0;
   }
   .page-intro {
-    margin-bottom: 27px;
+    margin-bottom: 15px;
   }
   .page-intro .eyebrow {
     font-size: 8px;
     letter-spacing: 1px;
-    margin-bottom: 17px;
+    margin-bottom: 13px;
   }
   h1 {
     font-size: 43px;
@@ -2670,14 +2676,14 @@ h1 em {
   .page-intro > div > p:not(.eyebrow) {
     font-size: 12px;
     line-height: 1.8;
-    margin-top: 17px;
+    margin-top: 13px;
     max-width: 340px;
   }
   .today-note {
     display: none;
   }
   .today-intro {
-    margin-bottom: 28px;
+    margin-bottom: 16px;
   }
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -2717,10 +2723,10 @@ h1 em {
   }
   .month-labels {
     font-size: 8px;
-    gap: 4px;
+    gap: var(--grid-gap);
   }
-  .contribution-grid {
-    gap: 4px;
+  .grid-chart-body {
+    --grid-gap: 4px;
   }
   .day-square {
     border-radius: 2px;
@@ -3322,8 +3328,8 @@ h1 em {
   .activity-card .section-heading h2 {
     font-size: 18px;
   }
-  .contribution-grid {
-    gap: 3px;
+  .grid-chart-body {
+    --grid-gap: 3px;
   }
   .grid-footer {
     font-size: 7px;
@@ -3439,3 +3445,7 @@ h1 em {
 .sprout-celebration > .icon-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .sprout-celebration-copy { min-width: 0; max-width: 320px; overflow-wrap: anywhere; }
 .sprout-celebration > .icon-button { flex-shrink: 0; }
+
+@media (max-width: 1000px) {
+  .grid-chart-body { --grid-columns: 16; }
+}
