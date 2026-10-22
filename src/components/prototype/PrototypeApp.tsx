@@ -411,14 +411,14 @@ export default function PrototypeApp({
         <button
           className="brand"
           onClick={() => navigate("today")}
-          aria-label="to.daily home"
+          aria-label="Todayly home"
         >
           <span className="brand-mark" aria-hidden="true">
-            .d
+            <Sprout size={25} strokeWidth={1.6} />
           </span>
           <span>
-            to<span className="brand-period">.daily</span>
-            <small>A little, every day.</small>
+            Todayly
+            <small>Grow every day</small>
           </span>
         </button>
         <button
@@ -521,7 +521,7 @@ export default function PrototypeApp({
               Your space<span>/</span>
               {navigation.find((n) => n.view === view)?.label}
             </span>
-            <span className="mobile-brand">to.daily</span>
+            <span className="mobile-brand">Todayly</span>
           </div>
           <div className="area-switch" aria-label="Choose an area">
             <button
@@ -552,9 +552,6 @@ export default function PrototypeApp({
           >
             <Plus size={16} />
             <span>Log a little something</span>
-          </button>
-          <button className="icon-button sprout-preview" aria-label="Preview sprout celebration" title="Preview a little celebration" onClick={() => celebrate("session")}>
-            <Sprout size={19} />
           </button>
         </header>
         <main id="main-content" className="page-content">
@@ -698,7 +695,7 @@ export default function PrototypeApp({
             />
           )}
           <footer className="page-footer">
-            <span className="footer-brand">to.daily</span>
+            <span className="footer-brand">Todayly</span>
             <p>Evidence, not judgment.</p>
             <span>
               Made for a life in progress.

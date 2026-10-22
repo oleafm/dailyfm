@@ -18,6 +18,7 @@ import {
   Palette,
   Play,
   Plus,
+  Quote,
   Sparkles,
   Sprout,
   Users,
@@ -461,12 +462,12 @@ export function ProjectsView({
           <p>It doesn’t need a perfect plan.</p>
         </button>
       </div>
-      <div className="editorial-note">
-        <ArrowRight size={25} strokeWidth={1.4} />
+      <blockquote className="editorial-note">
+        <Quote size={25} strokeWidth={1.4} aria-hidden="true" />
         <p>
           Progress is easier to see when you leave a little evidence behind.
         </p>
-      </div>
+      </blockquote>
     </>
   );
 }
@@ -613,7 +614,7 @@ export function MemoriesView({
         <Empty>Room for a first. Your memories will find a home here.</Empty>
       )}
       <div className="archive-summary">
-        <span className="serif">{new Date().getFullYear()}</span>
+        <p><strong>{new Date().getFullYear()}</strong> your story so far</p>
         <p>
           <strong>{state.completions.length}</strong> moments kept
         </p>
@@ -699,7 +700,8 @@ export function InsightsView({
     <>
       <div className="page-intro">
         <p className="eyebrow">
-          THE LAST SEVEN DAYS ·{" "}
+          <span className="live-dot" />
+          The last seven days ·{" "}
           {prettyDate(relativeDay(-6), { month: "short", day: "numeric" })} —{" "}
           {prettyDate(relativeDay(0), { month: "short", day: "numeric" })}
         </p>
@@ -783,10 +785,10 @@ export function InsightsView({
           </article>
         ))}
       </div>
-      <div className="editorial-note">
-        <ArrowRight size={25} strokeWidth={1.4} />
+      <blockquote className="editorial-note">
+        <Quote size={25} strokeWidth={1.4} aria-hidden="true" />
         <p>Patterns are invitations to get curious. They’re never a verdict.</p>
-      </div>
+      </blockquote>
     </>
   );
 }
