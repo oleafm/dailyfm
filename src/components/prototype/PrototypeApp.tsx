@@ -411,13 +411,13 @@ export default function PrototypeApp({
         <button
           className="brand"
           onClick={() => navigate("today")}
-          aria-label="Todayly home"
+          aria-label="to.daily home"
         >
           <span className="brand-mark" aria-hidden="true">
             <Sprout size={25} strokeWidth={1.6} />
           </span>
           <span>
-            Todayly
+            to.daily
             <small>Grow every day</small>
           </span>
         </button>
@@ -470,15 +470,6 @@ export default function PrototypeApp({
           ))}
         </div>
         <div className="sidebar-bottom">
-          <div className="sidebar-thought">
-            <Illustration kind="growth" />
-            <p>
-              Small steps.
-              <br />
-              Still forward.
-            </p>
-            <span>A REMINDER FOR TODAY</span>
-          </div>
           <button
             className="prototype-label"
             onClick={() => setDialog({ type: "about" })}
@@ -521,7 +512,7 @@ export default function PrototypeApp({
               Your space<span>/</span>
               {navigation.find((n) => n.view === view)?.label}
             </span>
-            <span className="mobile-brand">Todayly</span>
+            <span className="mobile-brand">to.daily</span>
           </div>
           <div className="area-switch" aria-label="Choose an area">
             <button
@@ -695,7 +686,7 @@ export default function PrototypeApp({
             />
           )}
           <footer className="page-footer">
-            <span className="footer-brand">Todayly</span>
+            <span className="footer-brand">to.daily</span>
             <p>Evidence, not judgment.</p>
             <span>
               Made for a life in progress.
