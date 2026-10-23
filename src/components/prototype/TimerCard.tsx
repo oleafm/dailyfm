@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, RefObject } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -27,6 +27,7 @@ export default function TimerCard({
   onPause,
   onStop,
   onNewTask,
+  clockRef,
 }: {
   tasks: Task[];
   area: Area;
@@ -36,6 +37,7 @@ export default function TimerCard({
   onPause: () => void;
   onStop: () => void;
   onNewTask: () => void;
+  clockRef: RefObject<HTMLSpanElement>;
 }) {
   const available = tasks.filter((t) => !t.completed && t.area === area);
   const [selected, setSelected] = useState(available[0]?.id || "");
@@ -75,7 +77,7 @@ export default function TimerCard({
         role="timer"
         aria-label={`${seconds} seconds elapsed`}
       >
-        {clock(seconds)}
+        <span ref={clockRef}>{clock(seconds)}</span>
       </div>
       {!timer && (
         <div className="focus-task">

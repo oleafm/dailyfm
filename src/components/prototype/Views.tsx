@@ -463,10 +463,11 @@ export function ProjectsView({
         </button>
       </div>
       <blockquote className="editorial-note">
-        <Quote size={25} strokeWidth={1.4} aria-hidden="true" />
-        <p>
-          Progress is easier to see when you leave a little evidence behind.
-        </p>
+        <Quote size={42} strokeWidth={1.5} aria-hidden="true" />
+        <div>
+          <span className="eyebrow">A little perspective</span>
+          <p>Progress is easier to see when you leave a little evidence behind.</p>
+        </div>
       </blockquote>
     </>
   );
@@ -614,26 +615,31 @@ export function MemoriesView({
         <Empty>Room for a first. Your memories will find a home here.</Empty>
       )}
       <div className="archive-summary">
-        <p><strong>{new Date().getFullYear()}</strong> your story so far</p>
-        <p>
-          <strong>{state.completions.length}</strong> moments kept
-        </p>
-        <p>
-          <strong>
-            {
-              new Set(
-                state.completions
-                  .filter((c) => c.location)
-                  .map((c) => c.location),
-              ).size
-            }
-          </strong>{" "}
-          places remembered
-        </p>
-        <p>
-          <strong>{state.completions.filter((c) => c.photo).length}</strong>{" "}
-          images in your story
-        </p>
+        <div className="archive-year">
+          <span className="year-echo" aria-hidden="true">{new Date().getFullYear()}</span>
+          <span>{new Date().getFullYear()}</span>
+        </div>
+        <div className="archive-stats">
+          <p>
+            <strong>{state.completions.length}</strong> moments kept
+          </p>
+          <p>
+            <strong>
+              {
+                new Set(
+                  state.completions
+                    .filter((c) => c.location)
+                    .map((c) => c.location),
+                ).size
+              }
+            </strong>{" "}
+            places remembered
+          </p>
+          <p>
+            <strong>{state.completions.filter((c) => c.photo).length}</strong>{" "}
+            images in your story
+          </p>
+        </div>
       </div>
     </>
   );
@@ -786,8 +792,11 @@ export function InsightsView({
         ))}
       </div>
       <blockquote className="editorial-note">
-        <Quote size={25} strokeWidth={1.4} aria-hidden="true" />
-        <p>Patterns are invitations to get curious. They’re never a verdict.</p>
+        <Quote size={42} strokeWidth={1.5} aria-hidden="true" />
+        <div>
+          <span className="eyebrow">A little perspective</span>
+          <p>Patterns are invitations to get curious. They’re never a verdict.</p>
+        </div>
       </blockquote>
     </>
   );

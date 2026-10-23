@@ -1395,23 +1395,28 @@ h1 em {
 }
 .editorial-note {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  margin: 42px 0;
-  padding: 18px 24px;
-  color: #777;
-  border-left: 3px solid var(--accent);
+  align-items: flex-start;
+  gap: 24px;
+  margin: 36px 0;
+  padding: 34px 36px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius);
 }
 .editorial-note > svg {
-  color: #181818;
-  font-size: 32px;
+  color: var(--accent);
 }
-.editorial-note > p {
-  font-size: 16px;
-  line-height: 1.7;
-  font-weight: 500;
-  letter-spacing: -0.3px;
+.editorial-note .eyebrow {
+  display: block;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+.editorial-note p {
+  max-width: 720px;
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.6px;
 }
 .back-link {
   margin-bottom: 26px;
@@ -1650,22 +1655,41 @@ h1 em {
   background: var(--surface);
   border-radius: var(--radius);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 45px;
-  padding: 31px 20px;
+  gap: 36px;
+  padding: 26px 32px;
   margin-top: 40px;
 }
-.archive-summary .serif {
-  font-size: 41px;
-  letter-spacing: -2px;
+.archive-year {
+  position: relative;
+  flex-shrink: 0;
+  color: var(--ink);
+  font-size: clamp(72px, 9vw, 132px);
   font-weight: 750;
-  margin-right: 12px;
-  color: #b1b1b1;
+  line-height: 1;
+  letter-spacing: -7px;
+}
+.archive-year > span:last-child {
+  position: relative;
+}
+.archive-year .year-echo {
+  position: absolute;
+  inset: 0;
+  transform: translate(5px, -4px);
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent);
+}
+.archive-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 46px);
+  margin-left: auto;
 }
 .archive-summary p {
   color: #888;
   font-size: 10px;
+  line-height: 1.5;
 }
 .archive-summary strong {
   display: block;
@@ -2205,8 +2229,9 @@ h1 em {
   bottom: 25px;
   left: calc(218px + (100% - 218px) / 2);
   transform: translateX(-50%);
-  border: 1px solid #ddd;
-  background: #fffffff5;
+  border: 1px solid #333;
+  background: #181818;
+  color: #fff;
   backdrop-filter: blur(10px);
   border-radius: 40px;
   padding: 12px 18px;
@@ -2235,8 +2260,8 @@ h1 em {
 }
 .floating-timer > .icon-button {
   flex-shrink: 0;
-  background: #181818;
-  color: #fff;
+  background: #fff;
+  color: #181818;
 }
 .toast {
   position: fixed;
@@ -3448,3 +3473,45 @@ h1 em {
 .activity-card .section-heading { flex-wrap: wrap; row-gap: 12px; }
 .activity-card .contribution-chart { margin-top: 36px; margin-bottom: 25px; }
 .archive-summary .serif { color: var(--ink); }
+
+/* A persistent timer surface permits a fade when the main clock returns. */
+.floating-timer {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 12px) scale(0.88);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+}
+.floating-timer.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0) scale(1);
+  animation: timer-arrive 560ms both;
+}
+.floating-timer > .text-button { color: #fff; }
+.floating-timer > .text-button:hover { color: var(--accent); }
+.floating-timer > .icon-button:hover { background: var(--accent); color: #181818; }
+@keyframes timer-arrive {
+  0% { opacity: 0; transform: translate(-50%, 22px) scale(0.72); }
+  55% { opacity: 1; transform: translate(-50%, -5px) scale(1.05); }
+  78% { transform: translate(-50%, 2px) scale(0.98); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+@media (max-width: 1000px) {
+  .archive-summary { gap: 24px; padding: 24px; }
+  .archive-year { font-size: 84px; letter-spacing: -5px; }
+}
+@media (max-width: 760px) {
+  .archive-summary { flex-direction: column; align-items: stretch; gap: 28px; padding: 28px 24px; }
+  .archive-year { font-size: clamp(84px, 25vw, 140px); align-self: flex-start; }
+  .archive-stats { width: 100%; gap: 12px; }
+  .archive-summary p { font-size: 9px; }
+  .archive-summary strong { font-size: 26px; }
+  .editorial-note { padding: 26px 24px; gap: 16px; }
+  .editorial-note > svg { width: 30px; height: 30px; }
+  .editorial-note p { font-size: 20px; line-height: 1.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-timer, .floating-timer.is-visible { animation: none; transition: none; }
+}

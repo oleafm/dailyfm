@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
+  BriefcaseBusiness,
   Check,
   ChevronRight,
   Compass,
@@ -109,6 +110,9 @@ export default function PrototypeApp({
   const [mobileMenu, setMobileMenu] = useState(false);
   const [focusVisible, setFocusVisible] = useState(true);
   const focusRef = useRef<HTMLDivElement>(null);
+  const clockRef = useRef<HTMLSpanElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const floatingVisible = !!timer && (view !== "today" || !focusVisible);
   useEffect(() => {
     const loaded = loadPrototype();
     setState(loaded);
@@ -167,13 +171,27 @@ export default function PrototypeApp({
     return () => clearTimeout(timeout);
   }, [toast]);
   useEffect(() => {
-    if (view !== "today" || !ready || !focusRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setFocusVisible(entry.isIntersecting),
-      { threshold: 0.2 },
-    );
-    observer.observe(focusRef.current);
-    return () => observer.disconnect();
+    if (view !== "today" || !ready || !clockRef.current || !headerRef.current)
+      return;
+    let observer: IntersectionObserver;
+    const observeClock = () => {
+      observer?.disconnect();
+      observer = new IntersectionObserver(
+        ([entry]) => setFocusVisible(entry.isIntersecting),
+        {
+          threshold: 0,
+          rootMargin: `-${headerRef.current!.offsetHeight}px 0px 0px 0px`,
+        },
+      );
+      observer.observe(clockRef.current!);
+    };
+    observeClock();
+    const resize = new ResizeObserver(observeClock);
+    resize.observe(headerRef.current);
+    return () => {
+      observer.disconnect();
+      resize.disconnect();
+    };
   }, [view, ready]);
   const today = relativeDay(0);
   const seconds = timer
@@ -499,7 +517,7 @@ export default function PrototypeApp({
         />
       )}
       <div className="app-main">
-        <header className="topbar">
+        <header ref={headerRef} className="topbar">
           <div className="topbar-left">
             <button
               className="mobile-menu-button icon-button"
@@ -522,7 +540,7 @@ export default function PrototypeApp({
                 navigate("today", null, "do");
               }}
             >
-              <Feather size={14} />
+              <BriefcaseBusiness size={14} />
               Do<span>make things happen</span>
             </button>
             <button
@@ -601,6 +619,7 @@ export default function PrototypeApp({
                 />
                 <div ref={focusRef}>
                   <TimerCard
+                    clockRef={clockRef}
                     tasks={state.tasks}
                     area={area}
                     timer={timer}
@@ -708,8 +727,11 @@ export default function PrototypeApp({
           </button>
         ))}
       </nav>
-      {timer && (view !== "today" || !focusVisible) && (
-        <div className="floating-timer">
+      {timer && (
+        <div
+          className={`floating-timer ${floatingVisible ? "is-visible" : ""}`}
+          aria-hidden={!floatingVisible}
+        >
           <button
             onClick={() => {
               navigate("today");
