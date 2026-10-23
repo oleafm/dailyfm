@@ -57,11 +57,13 @@ import {
 } from "./Views";
 import { Modal, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
+import FocusPicker from "./FocusPicker";
 import SproutCelebration, { CelebrationKind } from "./SproutCelebration";
 
 type Dialog = {
   type:
     | "task"
+    | "focus"
     | "activity"
     | "checkin"
     | "project"
@@ -74,6 +76,7 @@ type Dialog = {
     | "about";
   id?: string;
   category?: string;
+  returnToFocus?: boolean;
 };
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
@@ -488,6 +491,18 @@ export default function PrototypeApp({
           ))}
         </div>
         <div className="sidebar-bottom">
+          {!timer && (
+            <button
+              className="sidebar-focus"
+              onClick={() => setDialog({ type: "focus" })}
+              aria-label="Start focus"
+              aria-haspopup="dialog"
+            >
+              <span className="sidebar-focus-play"><Play size={16} fill="currentColor" /></span>
+              <span>Focus<small>Start focus</small></span>
+              <Plus size={15} aria-hidden="true" />
+            </button>
+          )}
           <button
             className="prototype-label"
             onClick={() => setDialog({ type: "about" })}
@@ -727,6 +742,16 @@ export default function PrototypeApp({
           </button>
         ))}
       </nav>
+      {!timer && (
+        <button
+          className="mobile-focus-shortcut"
+          aria-label="Start focus"
+          aria-haspopup="dialog"
+          onClick={() => setDialog({ type: "focus" })}
+        >
+          <Play size={20} fill="currentColor" />
+        </button>
+      )}
       {timer && (
         <div
           className={`floating-timer ${floatingVisible ? "is-visible" : ""}`}
@@ -782,6 +807,21 @@ export default function PrototypeApp({
           </>
         )}
       </div>
+      {dialog?.type === "focus" && !timer && (
+        <Modal title="A little room to focus." eyebrow="ONE THING AT A TIME" onClose={close}>
+          <FocusPicker
+            tasks={state.tasks}
+            projects={state.projects}
+            area={area}
+            initialTask={dialog.id}
+            onStart={(id) => {
+              startTimer(id);
+              close();
+            }}
+            onNewTask={() => setDialog({ type: "task", returnToFocus: true })}
+          />
+        </Modal>
+      )}
       {dialog?.type === "task" && (
         <Modal
           title="A small intention."
@@ -794,8 +834,12 @@ export default function PrototypeApp({
             initialProject={view === "projects" ? selectedProject : undefined}
             onSave={(task) => {
               setState((s) => ({ ...s, tasks: [...s.tasks, task] }));
-              setArea(task.area);
-              announce(`Added “${task.title}”. A small intention, ready when you are.`);
+              if (dialog.returnToFocus) {
+                setDialog({ type: "focus", id: task.id });
+              } else {
+                setArea(task.area);
+                announce(`Added “${task.title}”. A small intention, ready when you are.`);
+              }
             }}
           />
         </Modal>

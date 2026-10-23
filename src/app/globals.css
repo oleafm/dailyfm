@@ -3515,3 +3515,59 @@ h1 em {
 @media (prefers-reduced-motion: reduce) {
   .floating-timer, .floating-timer.is-visible { animation: none; transition: none; }
 }
+
+/* Focus can start from any view without changing the current page. */
+.sidebar-focus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 24px 0 12px;
+  padding: 14px 12px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sidebar-focus:hover { background: #303030; }
+.sidebar-focus-play {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.sidebar-focus small {
+  display: block;
+  margin-top: 4px;
+  color: #bbb;
+  font-size: 10px;
+  font-weight: 500;
+}
+.sidebar-focus > svg:last-child { margin-left: auto; }
+.mobile-focus-shortcut { display: none; }
+.focus-picker > .text-button { align-self: flex-start; }
+.focus-picker-empty { color: var(--secondary); line-height: 1.7; }
+@media (max-width: 760px) {
+  .sidebar-focus { display: none; }
+  .mobile-focus-shortcut {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    right: 20px;
+    bottom: calc(90px + env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    z-index: 60;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 5px 24px #00000020;
+  }
+  .mobile-focus-shortcut:hover { background: #303030; }
+}
