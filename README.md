@@ -4,7 +4,7 @@ An interactive, mobile-first concept for seeing evidence of a life in progress. 
 
 ## Run it
 
-Use the existing checkout at `/workspace/timerfm`. Each cloud task is already isolated; a new Git worktree is unnecessary unless explicitly requested.
+Use the existing checkout at `/workspace/dailyfm`. Each cloud task is already isolated; a new Git worktree is unnecessary unless explicitly requested.
 
 ```sh
 npm ci --cache /workspace/.npm
@@ -18,7 +18,7 @@ npm run build
 npm run start -- --hostname 0.0.0.0 --port 3000
 ```
 
-Validate types with `npx tsc --noEmit`. No Supabase setup, credentials, external APIs, or font downloads are needed for this prototype. The earlier Supabase helpers and schema remain in the repository but are not used by the prototype.
+Validate types with `npx tsc --noEmit`. For real accounts and persistent time logs, follow [Database setup](docs/DATABASE_SETUP.md). Without Supabase configuration the app runs in clearly labeled browser-only demo mode. No external fonts are required.
 
 ## Explore
 
@@ -30,11 +30,11 @@ Validate types with `npx tsc --noEmit`. No Supabase setup, credentials, external
 - **Memories:** create Explore / Build / Stretch invitations, add an experience with a photo and a note, record whether you would do it again, and browse the archive. Uploaded JPG, PNG, and WebP files are limited to 2 MB. A clearly labeled sample illustration is available for testing.
 - **Weekly notes:** see the last seven days of intentional time and a category breakdown. Pattern notes are simulated from local activity data; they are not live AI analysis or health advice.
 
-## Local data
+## Account data and demo data
 
-The app starts with deterministic sample history relative to the date of first use. New actions are stored in the browser's `localStorage`, under `timerfm-prototype-v1`; the active timer has its own `timerfm-active-timer-v1` key. Data stays on the current device and browser. There is no account, synchronization, tracking, or connected health service. Sample artwork lives in `public/memories`.
+Supabase-backed accounts start empty and save tasks, projects, completed sessions, activities, check-ins, and memories privately to PostgreSQL. The sidebar reports saving, saved, and failed-write states. Pending changes are backed up per account in the browser; revision checks prevent another device from silently overwriting them. A running timer is device-local; completed sessions synchronize. See [Database setup and recovery](docs/DATABASE_SETUP.md).
 
-`src/lib/prototype/types.ts` defines the product models, `seed.ts` supplies sample data and evidence calculations, and `storage.ts` is the persistence boundary that a future database adapter can replace. Components in `src/components/prototype` separate the grid, timer, forms, shared dialogs, and screen views.
+Without database configuration, deterministic sample history and edits stay under the `timerfm-prototype-v1` browser key. Demo data is never imported into a real account automatically. Sample artwork lives in `public/memories`.
 
 Streaks count consecutive days with recorded activity. Momentum is a transparent prototype heuristic: up to 55 points for active days in the last 14 days, plus up to 45 points for activity frequency. It is not a productivity or well-being score.
 

@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { User as AccountUser } from "@supabase/supabase-js";
+import AccountGate from "../account/AccountGate";
+import { accountClient } from "@/lib/account/client";
+import { useWorkspace } from "@/lib/account/useWorkspace";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -23,18 +27,16 @@ import {
   ActiveTimer,
   Activity,
   Area,
-  PrototypeState,
   View,
 } from "@/lib/prototype/types";
 import {
-  createSeed,
   duration,
   momentum,
   prettyDate,
   relativeDay,
   streak,
 } from "@/lib/prototype/seed";
-import { loadPrototype, savePrototype } from "@/lib/prototype/storage";
+
 import ActivityGrid from "./ActivityGrid";
 import TimerCard, { clock } from "./TimerCard";
 import {
@@ -64,6 +66,7 @@ type Dialog = {
   type:
     | "task"
     | "focus"
+    | "account"
     | "activity"
     | "checkin"
     | "project"
@@ -85,14 +88,22 @@ const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "insights", label: "Weekly notes", icon: BookOpen },
 ];
 const TIMER_KEY = "timerfm-active-timer-v1";
-export default function PrototypeApp({
+export default function PrototypeApp(props: { initialView?: View; initialProject?: string | null }) {
+  return <AccountGate>{(account) => <Workspace key={account?.id || "demo"} {...props} account={account} />}</AccountGate>;
+}
+function Workspace({
   initialView = "today",
   initialProject = null,
+  account,
 }: {
   initialView?: View;
   initialProject?: string | null;
+  account: AccountUser | null;
 }) {
-  const [state, setState] = useState<PrototypeState>(createSeed);
+  const { state, setState, ready: dataReady, status: saveStatus, error: saveError, retry, loadCloud } = useWorkspace(account);
+  const hasConflict = saveStatus === "conflict";
+  const timerKey = account ? `${TIMER_KEY}:${account.id}` : TIMER_KEY;
+  const [accountError, setAccountError] = useState("");
   const [ready, setReady] = useState(false),
     [area, setArea] = useState<Area>("do");
   const [view, setView] = useState<View>(initialView),
@@ -117,13 +128,12 @@ export default function PrototypeApp({
   const headerRef = useRef<HTMLElement>(null);
   const floatingVisible = !!timer && (view !== "today" || !focusVisible);
   useEffect(() => {
-    const loaded = loadPrototype();
-    setState(loaded);
+    if (!dataReady) return;
     try {
-      const stored = JSON.parse(localStorage.getItem(TIMER_KEY) || "null");
+      const stored = JSON.parse(localStorage.getItem(timerKey) || "null");
       if (
         stored &&
-        loaded.tasks.some((t) => t.id === stored.taskId) &&
+        state.tasks.some((t) => t.id === stored.taskId) &&
         typeof stored.elapsed === "number" &&
         (stored.runningSince === null ||
           typeof stored.runningSince === "number")
@@ -149,20 +159,18 @@ export default function PrototypeApp({
     window.addEventListener("popstate", restoreLocation);
     setReady(true);
     return () => window.removeEventListener("popstate", restoreLocation);
-  }, [initialView, initialProject]);
-  useEffect(() => {
-    if (ready) setStorageWarning(!savePrototype(state));
-  }, [state, ready]);
+  }, [dataReady, initialView, initialProject, timerKey]);
   useEffect(() => {
     if (ready) {
       try {
-        if (timer) localStorage.setItem(TIMER_KEY, JSON.stringify(timer));
-        else localStorage.removeItem(TIMER_KEY);
+        if (timer) localStorage.setItem(timerKey, JSON.stringify(timer));
+        else localStorage.removeItem(timerKey);
+        setStorageWarning(false);
       } catch {
         setStorageWarning(true);
       }
     }
-  }, [timer, ready]);
+  }, [timer, ready, timerKey]);
   useEffect(() => {
     if (!timer?.runningSince) return;
     const tick = setInterval(() => setNow(Date.now()), 1000);
@@ -174,8 +182,10 @@ export default function PrototypeApp({
     return () => clearTimeout(timeout);
   }, [toast]);
   useEffect(() => {
-    if (view !== "today" || !ready || !clockRef.current || !headerRef.current)
+    if (view !== "today" || !ready || hasConflict || !clockRef.current || !headerRef.current)
       return;
+    const header = headerRef.current;
+    const clock = clockRef.current;
     let observer: IntersectionObserver;
     const observeClock = () => {
       observer?.disconnect();
@@ -183,19 +193,19 @@ export default function PrototypeApp({
         ([entry]) => setFocusVisible(entry.isIntersecting),
         {
           threshold: 0,
-          rootMargin: `-${headerRef.current!.offsetHeight}px 0px 0px 0px`,
+          rootMargin: `-${header.offsetHeight}px 0px 0px 0px`,
         },
       );
-      observer.observe(clockRef.current!);
+      observer.observe(clock);
     };
     observeClock();
     const resize = new ResizeObserver(observeClock);
-    resize.observe(headerRef.current);
+    resize.observe(header);
     return () => {
       observer.disconnect();
       resize.disconnect();
     };
-  }, [view, ready]);
+  }, [view, ready, hasConflict]);
   const today = relativeDay(0);
   const seconds = timer
     ? timer.elapsed +
@@ -318,7 +328,7 @@ export default function PrototypeApp({
       ],
     }));
     setTimer(null);
-    announce(`Saved ${clock(elapsed)} of focus. Time well spent.`, "session");
+    announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus on this device.`, "session");
   }
   function toggleTask(id: string) {
     const task = state.tasks.find((t) => t.id === id);
@@ -419,6 +429,21 @@ export default function PrototypeApp({
   const selectedDay = dialog?.type === "day" ? dialog.id || today : today;
   const dayActivities = state.activities.filter((a) => a.date === selectedDay);
   const dayCheckIn = state.checkIns.find((c) => c.date === selectedDay);
+  if (account && (!dataReady || saveStatus === "conflict"))
+    return (
+      <main className="account-screen"><section className="account-card">
+        <h1>{saveStatus === "conflict" ? "Let’s keep your changes safe." : "Opening your space…"}</h1>
+        {saveError && <p role="alert" className="account-error">{saveError}</p>}
+        {saveStatus === "conflict" ? <>
+          <p className="muted">Download your unsaved changes for recovery. Loading the account version replaces the unsaved changes in this browser.</p>
+          <button className="secondary-button" onClick={() => {
+            const url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }));
+            const link = document.createElement("a"); link.href = url; link.download = "to-daily-unsaved.json"; link.click(); URL.revokeObjectURL(url);
+          }}>Download my changes</button>
+          <button className="primary-button" onClick={() => void loadCloud()}>Load account version</button>
+        </> : saveStatus === "error" && <button className="primary-button" onClick={retry}>Retry connection</button>}
+      </section></main>
+    );
   if (!ready)
     return (
       <div className="loading-screen">
@@ -508,14 +533,14 @@ export default function PrototypeApp({
             onClick={() => setDialog({ type: "about" })}
           >
             <span />
-            Your space, on this device
+            {account ? (saveStatus === "saved" ? "Saved to your account" : "Changes waiting to save") : "Demo · on this device"}
             <ArrowUpRight size={12} />
           </button>
           <button
             className="profile"
-            onClick={() => setDialog({ type: "about" })}
+            onClick={() => setDialog({ type: account ? "account" : "about" })}
           >
-            <span className="avatar">A</span>
+            <span className="avatar">{state.user.name.slice(0, 1).toUpperCase()}</span>
             <span>
               {state.user.name}
               <small>A work in progress, too.</small>
@@ -579,10 +604,17 @@ export default function PrototypeApp({
           </button>
         </header>
         <main id="main-content" className="page-content">
+          <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
+            {account ? <>
+              <span className="live-dot" />
+              <span>{saveStatus === "saved" ? "Saved to your account" : saveStatus === "error" ? "Not saved to your account. Keep this tab open." : "Saving to your account…"}</span>
+              {saveStatus === "error" && <button className="text-button" onClick={retry}>Retry save</button>}
+              {saveError && <span>{saveError}</span>}
+            </> : <>Demo mode · Changes stay in this browser. Connect Supabase to use a real account.{saveError && <span>{saveError}</span>}</>}
+          </div>
           {storageWarning && (
             <div className="storage-warning" role="status">
-              Your latest changes are in this tab only. Device storage is
-              unavailable or full; try a smaller photo before closing.
+              Your running timer could not be backed up on this device. Keep this tab open until you finish and save your session.
             </div>
           )}
           {view === "today" && (
@@ -684,11 +716,20 @@ export default function PrototypeApp({
                     There was something else…
                   </button>
                 </section>
-                <ChallengeTeaser
-                  challenge={state.challenges[0]}
-                  completions={state.completions}
-                  onClick={() => navigate("memories")}
-                />
+                {state.challenges[0] ? (
+                  <ChallengeTeaser
+                    challenge={state.challenges[0]}
+                    completions={state.completions}
+                    onClick={() => navigate("memories")}
+                  />
+                ) : (
+                  <section className="card form">
+                    <p className="eyebrow">A LITTLE OUTSIDE THE EVERYDAY</p>
+                    <h2>Room for a first.</h2>
+                    <p className="muted">An invitation to try something new. Your own memories start here.</p>
+                    <button className="secondary-button" onClick={() => setDialog({ type: "challenge" })}>Set an invitation <Plus size={16} /></button>
+                  </section>
+                )}
               </div>
             </>
           )}
@@ -1115,6 +1156,25 @@ export default function PrototypeApp({
           </div>
         </Modal>
       )}
+      {dialog?.type === "account" && account && (
+        <Modal title="Your account." eyebrow="YOUR SPACE" onClose={close}>
+          <form className="form" onSubmit={(event) => {
+            event.preventDefault();
+            const name = String(new FormData(event.currentTarget).get("name")).trim();
+            if (name) { setState((current) => ({ ...current, user: { ...current.user, name } })); close(); }
+          }}>
+            <p className="muted">{account.email}</p>
+            <label>Your name<input name="name" defaultValue={state.user.name} required maxLength={80} /></label>
+            <button className="primary-button">Save profile</button>
+            {(saveStatus !== "saved" || timer) && <p className="muted">Finish or discard your timer and wait for your changes to save before signing out.</p>}
+            {accountError && <p role="alert" className="account-error">{accountError}</p>}
+            <button className="secondary-button" type="button" disabled={saveStatus !== "saved" || !!timer} onClick={async () => {
+              const result = await accountClient!.auth.signOut();
+              if (result.error) setAccountError(result.error.message);
+            }}>Sign out</button>
+          </form>
+        </Modal>
+      )}
       {dialog?.type === "about" && (
         <Modal
           title="Your own little corner."
@@ -1130,10 +1190,7 @@ export default function PrototypeApp({
               you.
             </p>
             <p className="muted">
-              This interactive prototype starts with sample history. Your tasks,
-              sessions, check-ins, and memories are saved in this browser, on
-              this device. No account or external services are connected.
-              Clearing browser data clears your changes.
+              {account ? "Your tasks, completed sessions, check-ins, and memories are saved to your private account. A running timer stays on the device where you started it. Wait for ‘Saved to your account’ before closing the page." : "This demo starts with sample history. Changes are saved only in this browser. Real accounts start fresh once Supabase is connected; demo history is never imported automatically."}
             </p>
             <button className="primary-button" onClick={close}>
               A little, every day.

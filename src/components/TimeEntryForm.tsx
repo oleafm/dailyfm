@@ -22,7 +22,7 @@ export default function TimeEntryForm({ projects, onSuccess, onCancel }: TimeEnt
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && supabase) {
       supabase
         .from('tasks')
         .select('*')
@@ -43,6 +43,10 @@ export default function TimeEntryForm({ projects, onSuccess, onCancel }: TimeEnt
     }
     if (!hours || isNaN(Number(hours)) || Number(hours) <= 0) {
       setError('Please enter valid hours');
+      return;
+    }
+    if (!supabase) {
+      setError('Connect Supabase before saving a time entry.');
       return;
     }
     setSaving(true);
