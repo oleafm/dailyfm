@@ -32,7 +32,7 @@ Validate types with `npx tsc --noEmit`. For real accounts and persistent time lo
 
 ## Account data and demo data
 
-Supabase-backed accounts start empty and save tasks, projects, completed sessions, activities, check-ins, and memories privately to PostgreSQL. The sidebar reports saving, saved, and failed-write states. Pending changes are backed up per account in the browser; revision checks prevent another device from silently overwriting them. A running timer is device-local; completed sessions synchronize. See [Database setup and recovery](docs/DATABASE_SETUP.md).
+Supabase-backed accounts start empty and save tasks, projects, completed sessions, activities, check-ins, and memories privately to PostgreSQL. Saving happens automatically; failed writes show a retry banner. Pending changes are backed up per account in the browser; revision checks prevent another device from silently overwriting them. A running timer is device-local; completed sessions synchronize. See [Database setup and recovery](docs/DATABASE_SETUP.md).
 
 Without database configuration, deterministic sample history and edits stay under the `timerfm-prototype-v1` browser key. Demo data is never imported into a real account automatically. Sample artwork lives in `public/memories`.
 

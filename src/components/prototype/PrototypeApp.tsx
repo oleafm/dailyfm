@@ -59,13 +59,13 @@ import {
 } from "./Views";
 import { Modal, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
-import FocusPicker from "./FocusPicker";
+import SessionFinishForm from "./SessionFinishForm";
+import { chronologicalActivities, finishSession, SessionDetails } from "@/lib/prototype/sessions";
 import SproutCelebration, { CelebrationKind } from "./SproutCelebration";
 
 type Dialog = {
   type:
     | "task"
-    | "focus"
     | "account"
     | "activity"
     | "checkin"
@@ -79,7 +79,6 @@ type Dialog = {
     | "about";
   id?: string;
   category?: string;
-  returnToFocus?: boolean;
 };
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
@@ -114,8 +113,7 @@ function Workspace({
     [toast, setToast] = useState("");
   const [timer, setTimer] = useState<ActiveTimer | null>(null),
     [now, setNow] = useState(Date.now());
-  const [sessionNote, setSessionNote] = useState(""),
-    [storageWarning, setStorageWarning] = useState(false);
+  const [storageWarning, setStorageWarning] = useState(false);
   const [celebration, setCelebration] = useState<{ kind: CelebrationKind; message?: string; id: number } | null>(null);
   function celebrate(kind: CelebrationKind, message?: string) {
     setToast("");
@@ -133,7 +131,7 @@ function Workspace({
       const stored = JSON.parse(localStorage.getItem(timerKey) || "null");
       if (
         stored &&
-        state.tasks.some((t) => t.id === stored.taskId) &&
+        (!stored.taskId || state.tasks.some((t) => t.id === stored.taskId)) &&
         typeof stored.elapsed === "number" &&
         (stored.runningSince === null ||
           typeof stored.runningSince === "number")
@@ -239,20 +237,20 @@ function Workspace({
     window.history.pushState(null, "", `/?${params}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function startTimer(id: string) {
-    if (timer && timer.taskId !== id) {
+  function startTimer(id?: string) {
+    if (timer && id && timer.taskId !== id) {
       setToast("Finish your current session first. One thing at a time.");
       navigate("today");
       return;
     }
     const time = Date.now();
     setNow(time);
-    if (!timer) setSessionNote("");
     setTimer((current) =>
       current
-        ? { ...current, runningSince: current.runningSince || time }
+        ? { ...current, endedAt: undefined, runningSince: current.runningSince || time }
         : {
             taskId: id,
+            area: state.tasks.find((task) => task.id === id)?.area || area,
             startedAt: new Date(time).toISOString(),
             elapsed: 0,
             runningSince: time,
@@ -291,42 +289,14 @@ function Workspace({
   }
   function stopTimer() {
     pauseTimer();
+    const endedAt = new Date().toISOString();
+    setTimer((current) => current ? { ...current, endedAt } : null);
     setDialog({ type: "session" });
   }
-  function saveSession() {
-    if (!timer || !activeTask) return;
-    const id = uid(),
-      date = today,
-      elapsed = Math.max(1, seconds);
-    setState((s) => ({
-      ...s,
-      sessions: [
-        ...s.sessions,
-        {
-          id,
-          taskId: timer.taskId,
-          startedAt: timer.startedAt,
-          durationSeconds: elapsed,
-          date,
-          note: sessionNote.trim(),
-        },
-      ],
-      activities: [
-        ...s.activities,
-        {
-          id: `session-${id}`,
-          title: activeTask.title,
-          date,
-          area: activeTask.area,
-          category: activeTask.category,
-          kind: "session",
-          minutes: elapsed / 60,
-          note: sessionNote.trim(),
-          projectId: activeTask.projectId,
-          source: "timer",
-        },
-      ],
-    }));
+  function saveSession(details: SessionDetails) {
+    if (!timer) return;
+    const elapsed = Math.max(1, seconds);
+    setState((current) => finishSession(current, timer, elapsed, details, uid));
     setTimer(null);
     announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus on this device.`, "session");
   }
@@ -349,6 +319,7 @@ function Workspace({
             {
               id: `task-${id}`,
               title: task.title,
+              recordedAt: new Date().toISOString(),
               date: today,
               area: task.area,
               category: task.category,
@@ -421,7 +392,7 @@ function Workspace({
     }
   }
   function addActivity(activity: Activity) {
-    setState((s) => ({ ...s, activities: [...s.activities, activity] }));
+    setState((s) => ({ ...s, activities: [...s.activities, { ...activity, recordedAt: new Date().toISOString() }] }));
     announce(`Logged “${activity.title}”. A little piece of your day, kept.`);
   }
   const selectedChallenge = state.challenges.find((c) => c.id === dialog?.id);
@@ -457,13 +428,13 @@ function Workspace({
         <button
           className="brand"
           onClick={() => navigate("today")}
-          aria-label="to.daily home"
+          aria-label="do.daily home"
         >
           <span className="brand-mark" aria-hidden="true">
             <Sprout size={25} strokeWidth={1.6} />
           </span>
           <span>
-            to.daily
+            do.daily
             <small>Grow every day</small>
           </span>
         </button>
@@ -519,23 +490,21 @@ function Workspace({
           {!timer && (
             <button
               className="sidebar-focus"
-              onClick={() => setDialog({ type: "focus" })}
+              onClick={() => startTimer()}
               aria-label="Start focus"
-              aria-haspopup="dialog"
             >
               <span className="sidebar-focus-play"><Play size={16} fill="currentColor" /></span>
-              <span>Focus<small>Start focus</small></span>
-              <Plus size={15} aria-hidden="true" />
+              <span>Start focus</span>
             </button>
           )}
-          <button
+          {!account && <button
             className="prototype-label"
             onClick={() => setDialog({ type: "about" })}
           >
             <span />
-            {account ? (saveStatus === "saved" ? "Saved to your account" : "Changes waiting to save") : "Demo · on this device"}
+            Demo · on this device
             <ArrowUpRight size={12} />
-          </button>
+          </button>}
           <button
             className="profile"
             onClick={() => setDialog({ type: account ? "account" : "about" })}
@@ -570,7 +539,7 @@ function Workspace({
               Your space<span>/</span>
               {navigation.find((n) => n.view === view)?.label}
             </span>
-            <span className="mobile-brand">to.daily</span>
+            <span className="mobile-brand">do.daily</span>
           </div>
           <div className="area-switch" aria-label="Choose an area">
             <button
@@ -604,14 +573,14 @@ function Workspace({
           </button>
         </header>
         <main id="main-content" className="page-content">
-          <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
+          {(!account || saveStatus === "error") && <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
             {account ? <>
               <span className="live-dot" />
-              <span>{saveStatus === "saved" ? "Saved to your account" : saveStatus === "error" ? "Not saved to your account. Keep this tab open." : "Saving to your account…"}</span>
+              <span>Not saved to your account. Keep this tab open.</span>
               {saveStatus === "error" && <button className="text-button" onClick={retry}>Retry save</button>}
               {saveError && <span>{saveError}</span>}
             </> : <>Demo mode · Changes stay in this browser. Connect Supabase to use a real account.{saveError && <span>{saveError}</span>}</>}
-          </div>
+          </div>}
           {storageWarning && (
             <div className="storage-warning" role="status">
               Your running timer could not be backed up on this device. Keep this tab open until you finish and save your session.
@@ -674,7 +643,6 @@ function Workspace({
                     onStart={startTimer}
                     onPause={pauseTimer}
                     onStop={stopTimer}
-                    onNewTask={() => setDialog({ type: "task" })}
                   />
                 </div>
               </div>
@@ -703,10 +671,7 @@ function Workspace({
                     onAction={() => setDialog({ type: "day", id: today })}
                   />
                   <ActivityRows
-                    activities={todays
-                      .filter((a) => a.area === area)
-                      .slice(-4)
-                      .reverse()}
+                    activities={chronologicalActivities(todays.filter((a) => a.area === area), state.sessions).slice(-4)}
                   />
                   <button
                     className="text-button story-add"
@@ -761,7 +726,7 @@ function Workspace({
             />
           )}
           <footer className="page-footer">
-            <span className="footer-brand">to.daily</span>
+            <span className="footer-brand">do.daily</span>
             <p>Evidence, not judgment.</p>
             <span>
               Made for a life in progress.
@@ -787,8 +752,7 @@ function Workspace({
         <button
           className="mobile-focus-shortcut"
           aria-label="Start focus"
-          aria-haspopup="dialog"
-          onClick={() => setDialog({ type: "focus" })}
+          onClick={() => startTimer()}
         >
           <Play size={20} fill="currentColor" />
         </button>
@@ -812,7 +776,7 @@ function Workspace({
             }}
           >
             <span className={timer.runningSince ? "live-dot" : "paused-dot"} />
-            {activeTask?.title}
+            {activeTask?.title || "Focus session"}
             <strong>{clock(seconds)}</strong>
           </button>
           <button
@@ -848,21 +812,6 @@ function Workspace({
           </>
         )}
       </div>
-      {dialog?.type === "focus" && !timer && (
-        <Modal title="A little room to focus." eyebrow="ONE THING AT A TIME" onClose={close}>
-          <FocusPicker
-            tasks={state.tasks}
-            projects={state.projects}
-            area={area}
-            initialTask={dialog.id}
-            onStart={(id) => {
-              startTimer(id);
-              close();
-            }}
-            onNewTask={() => setDialog({ type: "task", returnToFocus: true })}
-          />
-        </Modal>
-      )}
       {dialog?.type === "task" && (
         <Modal
           title="A small intention."
@@ -875,12 +824,8 @@ function Workspace({
             initialProject={view === "projects" ? selectedProject : undefined}
             onSave={(task) => {
               setState((s) => ({ ...s, tasks: [...s.tasks, task] }));
-              if (dialog.returnToFocus) {
-                setDialog({ type: "focus", id: task.id });
-              } else {
-                setArea(task.area);
-                announce(`Added “${task.title}”. A small intention, ready when you are.`);
-              }
+              setArea(task.area);
+              announce(`Added “${task.title}”. A small intention, ready when you are.`);
             }}
           />
         </Modal>
@@ -1038,20 +983,7 @@ function Workspace({
               ? `${dayActivities.length} meaningful ${dayActivities.length === 1 ? "moment" : "moments"}. ${duration(dayActivities.reduce((s, a) => s + a.minutes, 0))} of intentional time.`
               : "Nothing recorded. A quiet day belongs in your story, too."}
           </p>
-          {(["do", "be"] as Area[]).map((a) => (
-            <section className="day-area" key={a}>
-              <p className="eyebrow">
-                {a === "do"
-                  ? "DO · THINGS YOU MOVED FORWARD"
-                  : "BE · A LITTLE LIFE LIVED"}
-              </p>
-              <ActivityRows
-                activities={dayActivities.filter(
-                  (activity) => activity.area === a,
-                )}
-              />
-            </section>
-          ))}
+          <ActivityRows activities={dayActivities} sessions={state.sessions} />
           {dayCheckIn && (
             <div className="day-reflection">
               <span>Mood · {dayCheckIn.mood}/10</span>
@@ -1071,44 +1003,18 @@ function Workspace({
           eyebrow="A SESSION, WELL SPENT"
           onClose={close}
         >
-          <form
-            className="form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              saveSession();
+          <SessionFinishForm
+            timer={timer}
+            seconds={seconds}
+            tasks={state.tasks}
+            projects={state.projects}
+            initialArea={area}
+            onSave={saveSession}
+            onDiscard={() => {
+              setTimer(null);
+              announce("A little breathing room. Session discarded.", false);
             }}
-          >
-            <div className="session-receipt">
-              <span>{activeTask?.category}</span>
-              <h3>{activeTask?.title}</h3>
-              <strong>{clock(seconds)}</strong>
-            </div>
-            <label>
-              A small piece of evidence{" "}
-              <span className="optional">optional</span>
-              <textarea
-                rows={3}
-                value={sessionNote}
-                onChange={(e) => setSessionNote(e.target.value)}
-                maxLength={1000}
-                placeholder="Finished the hero’s responsive layout. It finally feels right."
-              />
-            </label>
-            <button className="primary-button">
-              Save this session
-              <ArrowRight size={16} />
-            </button>
-            <button
-              className="text-button discard-button"
-              type="button"
-              onClick={() => {
-                setTimer(null);
-                announce("A little breathing room. Session discarded.", false);
-              }}
-            >
-              Discard this session
-            </button>
-          </form>
+          />
         </Modal>
       )}
       {dialog?.type === "momentum" && (
@@ -1190,7 +1096,7 @@ function Workspace({
               you.
             </p>
             <p className="muted">
-              {account ? "Your tasks, completed sessions, check-ins, and memories are saved to your private account. A running timer stays on the device where you started it. Wait for ‘Saved to your account’ before closing the page." : "This demo starts with sample history. Changes are saved only in this browser. Real accounts start fresh once Supabase is connected; demo history is never imported automatically."}
+              {account ? "Your tasks, completed sessions, check-ins, and memories are saved to your private account. A running timer stays on the device where you started it. Changes save automatically; keep this tab open if a save error appears." : "This demo starts with sample history. Changes are saved only in this browser. Real accounts start fresh once Supabase is connected; demo history is never imported automatically."}
             </p>
             <button className="primary-button" onClick={close}>
               A little, every day.

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:db": "tsx --test tests/account-database.test.ts"
+    "test:db": "node --import tsx tests/account-database.test.ts",
+    "test:time": "node --import tsx tests/time-sessions.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

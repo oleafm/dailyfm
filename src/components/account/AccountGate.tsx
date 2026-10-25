@@ -48,7 +48,7 @@ export default function AccountGate({ children }: { children: (user: User | null
   return (
     <main className="account-screen">
       <section className="account-card">
-        <div className="account-brand"><span className="brand-mark"><Sprout size={25} /></span><strong>to.daily<small>Grow every day</small></strong></div>
+        <div className="account-brand"><span className="brand-mark"><Sprout size={25} /></span><strong>do.daily<small>Grow every day</small></strong></div>
         <p className="eyebrow">YOUR TIME, KEPT SAFE</p>
         <h1>{signup ? "Make room for you." : "Welcome back."}</h1>
         <p className="muted">Sign in to keep your tasks and time logs in your account, across devices.</p>

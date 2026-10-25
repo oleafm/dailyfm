@@ -12,6 +12,7 @@
   --accent: #B6D929;
   --accent-soft: #f0f6d4;
   --radius: 22px;
+  --compact-timer-height: 58px;
   --font:
     -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
@@ -1409,11 +1410,11 @@ h1 em {
 .editorial-note .eyebrow {
   display: block;
   color: #aaa;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
 }
 .editorial-note p {
   max-width: 720px;
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1.4;
   font-weight: 600;
   letter-spacing: -0.6px;
@@ -1677,8 +1678,7 @@ h1 em {
   position: absolute;
   inset: 0;
   transform: translate(5px, -4px);
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--accent);
+  color: var(--accent);
 }
 .archive-stats {
   display: grid;
@@ -2225,6 +2225,7 @@ h1 em {
   justify-content: space-between;
 }
 .floating-timer {
+  height: var(--compact-timer-height);
   position: fixed;
   bottom: 25px;
   left: calc(218px + (100% - 218px) / 2);
@@ -3510,7 +3511,7 @@ h1 em {
   .archive-summary strong { font-size: 26px; }
   .editorial-note { padding: 26px 24px; gap: 16px; }
   .editorial-note > svg { width: 30px; height: 30px; }
-  .editorial-note p { font-size: 20px; line-height: 1.5; }
+  .editorial-note p { font-size: 17px; line-height: 1.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .floating-timer, .floating-timer.is-visible { animation: none; transition: none; }
@@ -3519,14 +3520,15 @@ h1 em {
 /* Focus can start from any view without changing the current page. */
 .sidebar-focus {
   display: flex;
+  height: var(--compact-timer-height);
   align-items: center;
   gap: 10px;
   width: 100%;
   margin: 24px 0 12px;
-  padding: 14px 12px;
+  padding: 0 14px;
   background: var(--ink);
   color: #fff;
-  border-radius: 16px;
+  border-radius: 999px;
   text-align: left;
   font-size: 12px;
   font-weight: 600;
@@ -3542,17 +3544,7 @@ h1 em {
   color: var(--ink);
   flex-shrink: 0;
 }
-.sidebar-focus small {
-  display: block;
-  margin-top: 4px;
-  color: #bbb;
-  font-size: 10px;
-  font-weight: 500;
-}
-.sidebar-focus > svg:last-child { margin-left: auto; }
 .mobile-focus-shortcut { display: none; }
-.focus-picker > .text-button { align-self: flex-start; }
-.focus-picker-empty { color: var(--secondary); line-height: 1.7; }
 @media (max-width: 760px) {
   .sidebar-focus { display: none; }
   .mobile-focus-shortcut {
@@ -3582,3 +3574,49 @@ h1 em {
 .account-save-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #777; font-size: 10px; line-height: 1.5; margin: 0 0 18px; }
 .account-save-status.has-error { padding: 12px 16px; border: 1px solid #e9c6bd; border-radius: 12px; color: #913a2c; background: #fff; }
 @media (max-width: 760px) { .account-card { padding: 28px 24px; } }
+
+.activity-row p.activity-time { color: #555; font-size: 10px; font-variant-numeric: tabular-nums; margin-top: 7px; }
+@media (max-width: 760px) { :root { --compact-timer-height: 48px; } }
+
+/* Keep quote artwork at the card edge, with dedicated space for the copy. */
+.editorial-note {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  min-height: 174px;
+  padding: 28px 274px 28px 36px;
+  overflow: hidden;
+}
+.editorial-note > div { min-width: 0; }
+.editorial-note > svg { align-self: start; }
+.editorial-note .quote-illustration {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 250px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+@media (min-width: 761px) and (max-width: 1200px) {
+  .editorial-note { padding-right: 204px; }
+  .editorial-note .quote-illustration { width: 180px; }
+}
+@media (max-width: 760px) {
+  .editorial-note {
+    grid-template-columns: 30px minmax(0, 1fr);
+    min-height: 0;
+    padding: 26px 24px 0;
+    row-gap: 12px;
+  }
+  .editorial-note .quote-illustration {
+    position: static;
+    grid-column: 1 / -1;
+    justify-self: end;
+    transform: none;
+    width: 160px;
+    margin-right: -24px;
+  }
+}

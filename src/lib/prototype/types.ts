@@ -26,13 +26,21 @@ export interface Task {
 }
 export interface TimerSession {
   id: string;
-  taskId: string;
+  taskId?: string;
+  title?: string;
+  area?: Area;
+  category?: string;
+  projectId?: string;
+  endedAt?: string;
   startedAt: string;
   durationSeconds: number;
   date: string;
   note: string;
 }
 export interface Activity {
+  startedAt?: string;
+  endedAt?: string;
+  recordedAt?: string;
   id: string;
   title: string;
   date: string;
@@ -94,7 +102,9 @@ export interface PrototypeState {
   completions: ChallengeCompletion[];
 }
 export interface ActiveTimer {
-  taskId: string;
+  taskId?: string;
+  area?: Area;
+  endedAt?: string;
   startedAt: string;
   elapsed: number;
   runningSince: number | null;

@@ -31,20 +31,31 @@ import {
   Project,
   PrototypeState,
   Task,
+  TimerSession,
   WeeklyInsight,
 } from "@/lib/prototype/types";
-import { duration, prettyDate, relativeDay } from "@/lib/prototype/seed";
+import { dateKey, duration, prettyDate, relativeDay } from "@/lib/prototype/seed";
+import { chronologicalActivities, displayTime } from "@/lib/prototype/sessions";
 import { Empty, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
 
-export function ActivityRows({ activities }: { activities: Activity[] }) {
+function ActivityTime({ activity }: { activity: Activity }) {
+  const { startedAt, endedAt, recordedAt } = activity;
+  const spansDays = startedAt && endedAt && dateKey(new Date(startedAt)) !== dateKey(new Date(endedAt));
+  const time = (value: string) => <time dateTime={value}>{spansDays ? `${prettyDate(dateKey(new Date(value)))} · ` : ""}{displayTime(value)}</time>;
+  return <p className="activity-time">{startedAt
+    ? <>{time(startedAt)}{endedAt ? <> — {time(endedAt)}</> : " · End time not recorded"}</>
+    : recordedAt ? <>Logged at {time(recordedAt)}</> : "Time not recorded"}</p>;
+}
+
+export function ActivityRows({ activities, sessions = [] }: { activities: Activity[]; sessions?: TimerSession[] }) {
   if (!activities.length)
     return (
       <Empty>A little breathing room. There’s nothing logged here yet.</Empty>
     );
   return (
     <div className="activity-list">
-      {activities.map((a) => (
+      {chronologicalActivities(activities, sessions).map((a) => (
         <article className="activity-row" key={a.id}>
           <span className={`activity-symbol ${a.area}`}>
             {a.area === "do" ? (
@@ -62,6 +73,7 @@ export function ActivityRows({ activities }: { activities: Activity[] }) {
               {a.distanceKm !== undefined ? ` · ${a.distanceKm} km` : ""}
               {a.minutes > 0 ? ` · ${duration(a.minutes)}` : ""}
             </p>
+            <ActivityTime activity={a} />
             {a.note && <p className="activity-note">“{a.note}”</p>}
           </div>
           <span className={`area-label ${a.area}`}>
@@ -468,6 +480,16 @@ export function ProjectsView({
           <span className="eyebrow">A little perspective</span>
           <p>Progress is easier to see when you leave a little evidence behind.</p>
         </div>
+        <img
+          className="quote-illustration"
+          src="/illustrations/perspective-planet.png"
+          alt=""
+          aria-hidden="true"
+          width={1536}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+        />
       </blockquote>
     </>
   );
@@ -797,6 +819,16 @@ export function InsightsView({
           <span className="eyebrow">A little perspective</span>
           <p>Patterns are invitations to get curious. They’re never a verdict.</p>
         </div>
+        <img
+          className="quote-illustration"
+          src="/illustrations/perspective-planet.png"
+          alt=""
+          aria-hidden="true"
+          width={1536}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+        />
       </blockquote>
     </>
   );

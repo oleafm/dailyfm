@@ -1,4 +1,4 @@
-# Connect a real to.daily account
+# Connect a real do.daily account
 
 The app uses Supabase Auth and PostgreSQL. Each account starts empty: sample projects, tasks, photos, and time history are never copied into your real records.
 
@@ -31,7 +31,7 @@ Restart `npm run dev` after configuring variables. Production deployments must r
 
 In Supabase Authentication settings, enable Email/password sign-in. Keep email confirmation enabled. Set the Site URL and allowed redirect URLs to the address where you run the app (your local development origin or deployed site). For reliable production email delivery, configure Supabase's SMTP service settings with your email provider.
 
-Open the app, choose **Create an account**, and confirm your email when requested. Then sign in, create a task, start focus, finish the session, and save it. Wait for **Saved to your account** before closing the page. Open the app in another browser/device and sign in to verify the session appears there.
+Open the app, choose **Create an account**, and confirm your email when requested. Then sign in and press Start focus. The timer starts immediately. On Finish, add a title, category, and optionally assign or create a task/project, then save the session. Changes save automatically. If a failed-save banner appears, retry and keep the page open until it clears. Open the app in another browser/device and sign in to verify the session appears there.
 
 Click your sidebar profile to edit your name or sign out. Finish/discard a timer and save outstanding changes before signing out.
 
@@ -58,6 +58,7 @@ The dashboard SQL editor runs with elevated database access. Browser clients hav
 
 ```sh
 npm run test:db
+npm run test:time
 npx tsc --noEmit
 npm run build
 ```

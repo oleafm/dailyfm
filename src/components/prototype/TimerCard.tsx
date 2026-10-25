@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useState, RefObject } from "react";
+import { RefObject } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
   Pause,
   Play,
-  Plus,
   Square,
 } from "lucide-react";
 import { ActiveTimer, Area, Task } from "@/lib/prototype/types";
@@ -26,25 +25,17 @@ export default function TimerCard({
   onStart,
   onPause,
   onStop,
-  onNewTask,
   clockRef,
 }: {
   tasks: Task[];
   area: Area;
   timer: ActiveTimer | null;
   seconds: number;
-  onStart: (id: string) => void;
+  onStart: (id?: string) => void;
   onPause: () => void;
   onStop: () => void;
-  onNewTask: () => void;
   clockRef: RefObject<HTMLSpanElement>;
 }) {
-  const available = tasks.filter((t) => !t.completed && t.area === area);
-  const [selected, setSelected] = useState(available[0]?.id || "");
-  useEffect(() => {
-    if (!available.some((t) => t.id === selected))
-      setSelected(available[0]?.id || "");
-  }, [area, tasks, selected]);
   const active = tasks.find((t) => t.id === timer?.taskId);
   return (
     <section
@@ -58,7 +49,7 @@ export default function TimerCard({
       </div>
       <h2>
         {timer
-          ? active?.title
+          ? active?.title || "Focus in progress."
           : area === "do"
             ? "One thing at a time."
             : "Be here for a while."}
@@ -79,35 +70,6 @@ export default function TimerCard({
       >
         <span ref={clockRef}>{clock(seconds)}</span>
       </div>
-      {!timer && (
-        <div className="focus-task">
-          <label htmlFor="focus-task">WHAT WILL YOU MAKE TIME FOR?</label>
-          <div>
-            <select
-              id="focus-task"
-              value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              {available.length ? (
-                available.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))
-              ) : (
-                <option value="">Create a task to begin</option>
-              )}
-            </select>
-            <button
-              className="focus-add"
-              aria-label="Create a focus task"
-              onClick={onNewTask}
-            >
-              <Plus size={17} />
-            </button>
-          </div>
-        </div>
-      )}
       {timer ? (
         <div className="timer-actions">
           <button
@@ -127,8 +89,7 @@ export default function TimerCard({
       ) : (
         <button
           className="focus-button"
-          disabled={!selected}
-          onClick={() => onStart(selected)}
+          onClick={() => onStart()}
         >
           <Play size={16} fill="currentColor" />
           Begin a session{" "}
