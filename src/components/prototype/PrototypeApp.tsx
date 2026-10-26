@@ -571,6 +571,11 @@ function Workspace({
             <Plus size={16} />
             <span>Log a little something</span>
           </button>
+          {account && <button
+            className="mobile-account-button avatar"
+            aria-label="Your account"
+            onClick={() => setDialog({ type: "account" })}
+          >{state.user.name.slice(0, 1).toUpperCase()}</button>}
         </header>
         <main id="main-content" className="page-content">
           {(!account || saveStatus === "error") && <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
@@ -950,12 +955,6 @@ function Workspace({
           onClose={close}
         >
           <div className="memory-detail">
-            <img src={selectedMemory.photo} alt={selectedMemory.title} />
-            {selectedMemory.photoIsSample && (
-              <span className="sample-label">
-                Seeded memory · sample illustration
-              </span>
-            )}
             <blockquote>“{selectedMemory.note}”</blockquote>
             <p>{selectedMemory.location || "Somewhere worth remembering"}</p>
             <div>
@@ -1077,6 +1076,12 @@ function Workspace({
             <button className="secondary-button" type="button" disabled={saveStatus !== "saved" || !!timer} onClick={async () => {
               const result = await accountClient!.auth.signOut();
               if (result.error) setAccountError(result.error.message);
+              else {
+                try {
+                  localStorage.removeItem(`todaily-account-v1:${account.id}`);
+                  localStorage.removeItem(timerKey);
+                } catch { /* Signing out still clears Supabase authentication. */ }
+              }
             }}>Sign out</button>
           </form>
         </Modal>

@@ -614,14 +614,9 @@ export function MemoriesView({
             className="memory-card"
             onClick={() => onMemory(c.id)}
           >
-            <div className="memory-image">
-              <img src={c.photo} alt={c.title} />
-              <span>
-                {state.challenges.find((ch) => ch.id === c.challengeId)
-                  ?.category || "A first"}
-              </span>
-              {c.photoIsSample && <small>Sample illustration</small>}
-            </div>
+            <span className="memory-category">
+              {state.challenges.find((ch) => ch.id === c.challengeId)?.category || "A first"}
+            </span>
             <p className="eyebrow">{prettyDate(c.date)}</p>
             <h3>{c.title}</h3>
             <p className="memory-note">{c.note}</p>
@@ -656,10 +651,6 @@ export function MemoriesView({
               }
             </strong>{" "}
             places remembered
-          </p>
-          <p>
-            <strong>{state.completions.filter((c) => c.photo).length}</strong>{" "}
-            images in your story
           </p>
         </div>
       </div>

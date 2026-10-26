@@ -18,26 +18,16 @@ export function validState(value: unknown, userId: string): value is PrototypeSt
     [state.tasks, state.projects, state.activities, state.sessions, state.checkIns, state.challenges, state.completions].every(Array.isArray);
 }
 export async function loadAccount(client: SupabaseClient, user: User): Promise<AccountRecord> {
-  const read = () => client.from("user_workspaces").select("data,revision").eq("user_id", user.id).maybeSingle();
-  let result = await read();
-  if (result.error) throw new Error(result.error.message);
-  if (!result.data) {
-    const created = await client.from("user_workspaces").upsert(
-      { user_id: user.id, data: emptyAccount(user), revision: 0 },
-      { onConflict: "user_id", ignoreDuplicates: true },
-    );
-    if (created.error) throw new Error(created.error.message);
-    result = await read();
-  }
-  if (result.error) throw new Error(result.error.message);
-  if (!result.data || !validState(result.data.data, user.id)) throw new Error("Your account data could not be loaded. Please retry.");
-  return result.data as AccountRecord;
+  const { data, error } = await client.rpc("daily_load_workspace", { p_initial: emptyAccount(user) });
+  if (error) throw new Error(error.message);
+  if (!data || !validState(data.data, user.id)) throw new Error("Your account data could not be loaded. Please retry.");
+  return data as AccountRecord;
 }
 export async function saveAccount(client: SupabaseClient, userId: string, record: AccountRecord): Promise<number> {
-  const { data, error } = await client.from("user_workspaces")
-    .update({ data: record.data, revision: record.revision + 1 })
-    .eq("user_id", userId).eq("revision", record.revision).select("revision").maybeSingle();
+  if (!validState(record.data, userId)) throw new Error("Invalid account data.");
+  const { data, error } = await client.rpc("daily_save_workspace", { p_data: record.data, p_revision: record.revision });
+  if (error?.code === "40001") throw new ConflictError();
   if (error) throw new Error(error.message);
-  if (!data) throw new ConflictError();
-  return data.revision;
+  if (typeof data !== "number") throw new Error("Database did not acknowledge the save.");
+  return data;
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ArrowRight, Camera, Check, ImagePlus } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import {
   Activity,
   Area,
@@ -433,25 +433,18 @@ export function CompletionForm({
   challenge: Challenge;
   onSave: (completion: ChallengeCompletion) => void;
 }) {
-  const [photo, setPhoto] = useState(""),
-    [sample, setSample] = useState(false),
-    [error, setError] = useState("");
   return (
     <form
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!photo) {
-          setError("Add a photo or choose a sample to keep this memory.");
-          return;
-        }
         const f = new FormData(e.currentTarget);
         onSave({
           id: uid(),
           challengeId: challenge.id,
           title: String(f.get("title")).trim(),
-          photo,
-          photoIsSample: sample,
+          photo: "",
+          photoIsSample: false,
           note: String(f.get("note")).trim(),
           date: String(f.get("date")),
           location: String(f.get("location")).trim(),
@@ -459,68 +452,7 @@ export function CompletionForm({
         });
       }}
     >
-      <p className="muted">
-        {challenge.title} Keep a little proof you were there.
-      </p>
-      {photo ? (
-        <div className="proof-preview">
-          <img src={photo} alt="Your selected memory" />
-          <button
-            type="button"
-            onClick={() => {
-              setPhoto("");
-              setError("");
-            }}
-          >
-            Change photo
-          </button>
-          {sample && <span>Sample illustration</span>}
-        </div>
-      ) : (
-        <label className="photo-upload">
-          <Camera size={25} />
-          <span>Add a photo</span>
-          <small>JPG, PNG or WebP · up to 2 MB</small>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              if (file.size > 2 * 1024 * 1024) {
-                setError("Please choose a photo smaller than 2 MB.");
-                return;
-              }
-              const reader = new FileReader();
-              reader.onload = () => {
-                setPhoto(String(reader.result));
-                setSample(false);
-                setError("");
-              };
-              reader.readAsDataURL(file);
-            }}
-          />
-        </label>
-      )}
-      {!photo && (
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => {
-            setPhoto("/memories/hills.svg");
-            setSample(true);
-            setError("");
-          }}
-        >
-          <ImagePlus size={16} />
-          Try with a sample image
-        </button>
-      )}
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
+      <p className="muted">{challenge.title} Keep a note of the experience.</p>
       <label>
         Give this memory a name
         <input

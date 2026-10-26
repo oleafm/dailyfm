@@ -1576,52 +1576,14 @@ h1 em {
   gap: 25px;
 }
 .memory-card {
-  padding: 0;
+  padding: 24px;
+  background: #fff;
+  border-radius: 17px;
   text-align: left;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-}
-.memory-image {
-  width: 100%;
-  aspect-ratio: 1.16;
-  margin-bottom: 23px;
-  position: relative;
-  border-radius: 17px;
-  overflow: hidden;
-  background: #e7e7e7;
-  flex-shrink: 0;
-}
-.memory-image > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1);
-  transition: transform 0.5s;
-}
-.memory-card:hover .memory-image > img {
-  transform: scale(1.04);
-}
-.memory-image > span {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  padding: 7px 11px;
-  border-radius: 20px;
-  background: #ffffffeb;
-  color: #555;
-  font-size: 9px;
-}
-.memory-image > small {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  padding: 4px 6px;
-  background: #18181899;
-  color: #fff;
-  font-size: 7px;
-  border-radius: 4px;
 }
 .memory-card > .eyebrow {
   font-size: 8px;
@@ -2022,67 +1984,6 @@ h1 em {
   color: #999;
   font-size: 9px;
 }
-.photo-upload {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-  min-height: 145px;
-  border: 1px dashed #c5c5c5;
-  border-radius: 15px;
-  color: #555;
-  background: #f6f6f6;
-  cursor: pointer;
-}
-.photo-upload > small {
-  font-size: 9px;
-  color: #999;
-}
-.photo-upload > input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  width: 100%;
-  cursor: pointer;
-}
-.photo-upload:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-.proof-preview {
-  position: relative;
-  height: 180px;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.proof-preview img {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  filter: grayscale(1);
-}
-.proof-preview button {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  background: #fff;
-  color: #333;
-  border-radius: 20px;
-  padding: 8px 11px;
-  font-size: 10px;
-}
-.proof-preview > span {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  font-size: 9px;
-  border-radius: 4px;
-  background: #ffffffdd;
-  color: #555;
-  padding: 5px 8px;
-}
 .session-receipt {
   border-radius: 16px;
   padding: 23px;
@@ -2107,14 +2008,6 @@ h1 em {
 .discard-button {
   font-size: 10px;
   color: #999;
-}
-.memory-detail > img {
-  width: 100%;
-  max-height: 300px;
-  object-fit: cover;
-  filter: grayscale(1);
-  border-radius: 14px;
-  margin-bottom: 13px;
 }
 .memory-detail blockquote {
   margin: 27px 0 22px;
@@ -3228,10 +3121,6 @@ h1 em {
     grid-template-columns: 1fr;
     gap: 33px;
   }
-  .memory-image {
-    aspect-ratio: 1.25;
-    margin-bottom: 22px;
-  }
   .memory-card > .eyebrow {
     font-size: 9px;
   }
@@ -3243,12 +3132,6 @@ h1 em {
   }
   .memory-location {
     font-size: 10px;
-  }
-  .memory-image > span {
-    font-size: 10px;
-  }
-  .memory-image > small {
-    font-size: 8px;
   }
   .archive-summary {
     flex-wrap: wrap;
@@ -3619,4 +3502,18 @@ h1 em {
     width: 160px;
     margin-right: -24px;
   }
+}
+
+.mobile-account-button { display: none; }
+@media (max-width: 760px) { .mobile-account-button { display: grid; flex-shrink: 0; width: 30px; height: 30px; font-size: 12px; } }
+
+.memory-category {
+  align-self: flex-start;
+  margin-bottom: 20px;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #181818;
+  font-size: 10px;
+  font-weight: 600;
 }

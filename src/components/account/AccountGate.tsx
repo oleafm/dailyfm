@@ -42,7 +42,15 @@ export default function AccountGate({ children }: { children: (user: User | null
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not sign in. Please try again."); }
     finally { setBusy(false); }
   }
-  if (!accountClient) return <>{children(null)}</>;
+  if (!accountClient) {
+    if (process.env.NODE_ENV === "production") return (
+      <main className="account-screen"><section className="account-card">
+        <h1>Your space is temporarily unavailable.</h1>
+        <p className="muted">Please try again later.</p>
+      </section></main>
+    );
+    return <>{children(null)}</>;
+  }
   if (loading) return <div className="loading-screen"><Sprout size={32} /><span>Opening your space…</span></div>;
   if (user) return <>{children(user)}</>;
   return (
