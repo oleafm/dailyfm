@@ -41,3 +41,7 @@ Streaks count consecutive days with recorded activity. Momentum is a transparent
 ## Validation
 
 The prototype was checked in Chromium for task creation and completion; Do / Be switching; dog-walk logging; check-in editing; timer pause/resume, reload recovery and session saving; project milestones; note-based memories and challenge completion; memory detail views; custom invitations; and local persistence. All four main views were checked for horizontal overflow at 360, 390, 768, 1024, and 1440 px. The production build and TypeScript check are the final implementation checks.
+
+## Reflect
+
+Guided daily journaling with mood and energy, reflection prompts, editable history, and date filters. Uses existing private check-in storage. See [Reflect design and future weekly AI concept](docs/REFLECT.md); AI is not enabled. Run `npm run test:journal` for journal behavior checks.

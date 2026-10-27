@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test:db": "node --import tsx tests/account-database.test.ts",
     "test:time": "node --import tsx tests/time-sessions.test.ts",
-    "test:security": "node --import tsx tests/owned-records.test.ts"
+    "test:security": "node --import tsx tests/owned-records.test.ts",
+    "test:journal": "node --import tsx tests/journal.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

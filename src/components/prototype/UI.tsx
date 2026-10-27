@@ -28,7 +28,7 @@ export function Modal({
         panel.querySelectorAll<HTMLElement>(
           'button, input, select, textarea, a[href], [tabindex="0"]',
         ),
-      ).filter((el) => !el.hasAttribute("disabled"));
+      ).filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);
     focusable()[0]?.focus();
     function key(e: KeyboardEvent) {
       if (e.key === "Escape") close.current();

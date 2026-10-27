@@ -38,11 +38,12 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
+import ReflectView, { GuidedJournalForm } from "./ReflectView";
+import { saveReflection } from "@/lib/prototype/journal";
 import TimerCard, { clock } from "./TimerCard";
 import {
   ActivityForm,
   ChallengeForm,
-  CheckInForm,
   CompletionForm,
   ProjectForm,
   TaskForm,
@@ -84,6 +85,7 @@ const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
   { view: "projects", label: "Projects", icon: Feather },
   { view: "memories", label: "Memories", icon: Compass },
+  { view: "reflect", label: "Reflect", icon: Leaf },
   { view: "insights", label: "Weekly notes", icon: BookOpen },
 ];
 const TIMER_KEY = "timerfm-active-timer-v1";
@@ -724,6 +726,7 @@ function Workspace({
               onMemory={(id) => setDialog({ type: "memory", id })}
             />
           )}
+          {view === "reflect" && <ReflectView entries={state.checkIns} onWrite={(date) => setDialog({ type: "checkin", id: date })} />}
           {view === "insights" && (
             <InsightsView
               state={state}
@@ -852,34 +855,16 @@ function Workspace({
       {dialog?.type === "checkin" && (
         <Modal
           title="A little room for you."
-          eyebrow="YOUR DAILY CHECK-IN"
+          eyebrow="YOUR GUIDED REFLECTION"
           onClose={close}
         >
-          <CheckInForm
-            existing={checkIn}
+          <GuidedJournalForm
+            key={dialog.id || today}
+            date={dialog.id || today}
+            existing={state.checkIns.find((entry) => entry.date === (dialog.id || today))}
             onSave={(entry) => {
-              setState((s) => ({
-                ...s,
-                checkIns: [
-                  ...s.checkIns.filter((c) => c.date !== today),
-                  entry,
-                ],
-                activities: [
-                  ...s.activities.filter((a) => a.id !== `checkin-${today}`),
-                  {
-                    id: `checkin-${today}`,
-                    title: "Made a little room to reflect",
-                    date: today,
-                    area: "be",
-                    category: "Reflect",
-                    kind: "reflection",
-                    minutes: 0,
-                    note: entry.movedForward,
-                    source: "manual",
-                  },
-                ],
-              }));
-              announce(checkIn ? "Daily check-in updated. A little more room for you." : "Daily check-in saved. You showed up for yourself.", "checkin");
+              setState((s) => saveReflection(s, entry));
+              announce("Reflection kept. A little more room for you.", "checkin");
             }}
           />
         </Modal>

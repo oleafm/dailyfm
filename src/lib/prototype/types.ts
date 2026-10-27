@@ -1,5 +1,5 @@
 export type Area = "do" | "be";
-export type View = "today" | "projects" | "memories" | "insights";
+export type View = "today" | "projects" | "memories" | "insights" | "reflect";
 export interface User {
   id: string;
   name: string;
@@ -62,6 +62,12 @@ export interface DailyCheckIn {
   id: string;
   date: string;
   mood: number;
+  energy?: number;
+  gratitude?: string;
+  tomorrow?: string;
+  dailyPrompt?: string;
+  dailyAnswer?: string;
+  updatedAt?: string;
   movedForward: string;
   reflection: Reflection;
 }

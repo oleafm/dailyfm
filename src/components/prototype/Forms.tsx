@@ -6,7 +6,6 @@ import {
   Area,
   Challenge,
   ChallengeCompletion,
-  DailyCheckIn,
   Project,
   Task,
 } from "@/lib/prototype/types";
@@ -218,99 +217,6 @@ export function ActivityForm({
       </label>
       <button className="primary-button" type="submit">
         Keep this moment <ArrowRight size={16} />
-      </button>
-    </form>
-  );
-}
-export function CheckInForm({
-  existing,
-  onSave,
-}: {
-  existing?: DailyCheckIn;
-  onSave: (checkIn: DailyCheckIn) => void;
-}) {
-  const [mood, setMood] = useState(existing?.mood || 6);
-  const descriptions = [
-    "A difficult day",
-    "A difficult day",
-    "A little low",
-    "A little low",
-    "Somewhere in between",
-    "Somewhere in between",
-    "Doing okay",
-    "Feeling good",
-    "Feeling good",
-    "Feeling light",
-    "Feeling light",
-  ];
-  return (
-    <form
-      className="form checkin-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const f = new FormData(e.currentTarget),
-          date = relativeDay(0);
-        onSave({
-          id: existing?.id || uid(),
-          date,
-          mood,
-          movedForward: String(f.get("forward")).trim(),
-          reflection: {
-            id: existing?.reflection.id || uid(),
-            date,
-            text: String(f.get("mind")).trim(),
-          },
-        });
-      }}
-    >
-      <div>
-        <label htmlFor="mood">
-          01 <span>How are you today?</span>
-        </label>
-        <div className="mood-value">
-          <span>{mood < 4 ? "◡" : mood < 8 ? "◡" : "☺"}</span>
-          <p>
-            {descriptions[mood]}
-            <small>{mood} out of 10</small>
-          </p>
-        </div>
-        <input
-          aria-label="Mood"
-          id="mood"
-          type="range"
-          min="1"
-          max="10"
-          value={mood}
-          onChange={(e) => setMood(Number(e.target.value))}
-        />
-        <div className="range-labels">
-          <span>A little low</span>
-          <span>Feeling light</span>
-        </div>
-      </div>
-      <label>
-        02 <span>What moved forward today?</span>
-        <textarea
-          name="forward"
-          rows={2}
-          maxLength={600}
-          defaultValue={existing?.movedForward}
-          placeholder="A small step is still a step."
-        />
-      </label>
-      <label>
-        03 <span>What is occupying your mind?</span>
-        <textarea
-          name="mind"
-          rows={3}
-          maxLength={1000}
-          defaultValue={existing?.reflection.text}
-          placeholder="Leave a thought here. No need to solve it."
-        />
-      </label>
-      <p className="form-hint">Only your mood is needed. The words can wait.</p>
-      <button className="primary-button" type="submit">
-        A moment, kept <Check size={16} />
       </button>
     </form>
   );

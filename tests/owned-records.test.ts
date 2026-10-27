@@ -58,10 +58,11 @@ it("keeps every populated personal-data collection private across accounts",asyn
  data.tasks=[{id:"t",title:"Private task",area:"do",category:"Work",projectId:"z",completed:false}];
  data.sessions=[{id:"s",taskId:"t",projectId:"z",startedAt:"2026-10-26T09:00:00Z",durationSeconds:60,date:"2026-10-26",note:"Private session"}];
  data.activities=[{id:"a",title:"Private activity",date:"2026-10-26",area:"do",category:"Work",kind:"session",minutes:1,source:"timer",projectId:"z"}];
- data.checkIns=[{id:"c",date:"2026-10-26",mood:5,movedForward:"Private thoughts",reflection:{id:"r",date:"2026-10-26",text:"Private reflection"}}];
+ data.checkIns=[{id:"c",date:"2026-10-26",mood:5,energy:3,gratitude:"Private gratitude",tomorrow:"Rest",dailyPrompt:"What helped?",dailyAnswer:"Private answer",movedForward:"Private thoughts",reflection:{id:"r",date:"2026-10-26",text:"Private reflection"}}];
  data.challenges=[{id:"h",title:"Private invitation",description:"Personal",category:"Explore",target:1,month:"2026-10"}];
  data.completions=[{id:"m",challengeId:"h",title:"Private memory",photo:"data:image/png;base64,PRIVATE_FIXTURE",photoIsSample:false,note:"Private note",date:"2026-10-26",location:"Private location",again:"Yes"}];
  await save(data,record.revision);
+ assert.deepEqual((await load(alice)).data.checkIns,data.checkIns);
  for(const table of tables)assert.equal((await db.query(`select * from public.daily_${table} where user_id=$1`,[alice])).rows.length,1);
  await owner(bob);
  for(const table of tables){
