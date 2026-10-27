@@ -41,6 +41,8 @@ create table public.daily_sessions (
 );
 create index daily_sessions_date on public.daily_sessions(user_id, (payload->>'date'));
 create index daily_sessions_project on public.daily_sessions(user_id,project_id);
+-- Create indexes before backfill queues deferred foreign-key checks.
+create index daily_sessions_started on public.daily_sessions(user_id,(payload->>'startedAt'));
 create table public.daily_activities (
  user_id uuid not null references public.daily_accounts(user_id) on delete cascade,
  id text not null,
@@ -213,5 +215,4 @@ do $$ declare old_table text; begin
   end if;
  end loop;
 end $$;
-create index daily_sessions_started on public.daily_sessions(user_id,(payload->>'startedAt'));
 commit;

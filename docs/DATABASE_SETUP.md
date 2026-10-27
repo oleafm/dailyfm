@@ -80,3 +80,7 @@ The browser currently loads a complete user workspace and submits its state to t
 MVP scope: photo uploads, previews, sample-image selection, photo displays, and image statistics are removed. Memories use notes, dates, locations, and repeat preferences. Existing image data is preserved privately for compatibility, but is not displayed; new memories store empty legacy photo fields. Dedicated photo storage is deferred until after MVP, when private owner-scoped storage can be considered.
 
 After successful signout, the app clears the local account backup and timer key. During use, browser backups remain device-local and are not end-to-end encrypted. Database permissions do not replace device/browser security. Live verification must test two real accounts after applying the new migration; local PostgreSQL tests and simulated API browser checks are not proof of live-project configuration.
+
+### Retrying an interrupted owned-record migration
+
+If the SQL Editor reports `cannot CREATE INDEX "daily_sessions" because it has pending trigger events`, use the corrected complete `202610260001_owned_records.sql` from GitHub and run it in a fresh SQL query. Its indexes are now created before the existing records are copied. The failed migration is transactional and rolls back rather than partially replacing your data. Do not delete tables or disable foreign-key checks. If you instead see `relation already exists`, stop and inspect whether the migration has already been applied before rerunning.
