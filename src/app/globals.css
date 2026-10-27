@@ -3461,47 +3461,29 @@ h1 em {
 .activity-row p.activity-time { color: #555; font-size: 10px; font-variant-numeric: tabular-nums; margin-top: 7px; }
 @media (max-width: 760px) { :root { --compact-timer-height: 48px; } }
 
-/* Keep quote artwork at the card edge, with dedicated space for the copy. */
+/* Small, clean vector illustrations for perspective cards. */
 .editorial-note {
   position: relative;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr) 136px;
   align-items: center;
-  min-height: 174px;
-  padding: 28px 274px 28px 36px;
+  gap: 20px;
+  min-height: 164px;
+  padding: 28px 24px;
   overflow: hidden;
+  background: #171717;
 }
 .editorial-note > div { min-width: 0; }
-.editorial-note > svg { align-self: start; }
-.editorial-note .quote-illustration {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 250px;
-  height: auto;
-  display: block;
-  pointer-events: none;
-}
-@media (min-width: 761px) and (max-width: 1200px) {
-  .editorial-note { padding-right: 204px; }
-  .editorial-note .quote-illustration { width: 180px; }
-}
+.editorial-note > .quote-mark { width: 28px; height: 28px; align-self: start; }
+.editorial-note .quote-illustration { display: block; width: 136px; height: 109px; pointer-events: none; }
+.editorial-note.quote-compact { grid-template-columns: 1fr; margin: 0; gap: 12px; padding: 28px; }
+.editorial-note.quote-compact p { font-size: 21px; line-height: 1.5; }
+.quote-compact .quote-illustration { justify-self: end; width: 120px; height: 96px; }
 @media (max-width: 760px) {
-  .editorial-note {
-    grid-template-columns: 30px minmax(0, 1fr);
-    min-height: 0;
-    padding: 26px 24px 0;
-    row-gap: 12px;
-  }
-  .editorial-note .quote-illustration {
-    position: static;
-    grid-column: 1 / -1;
-    justify-self: end;
-    transform: none;
-    width: 160px;
-    margin-right: -24px;
-  }
+  .editorial-note { grid-template-columns: 28px minmax(0, 1fr); gap: 14px; padding: 26px 24px; }
+  .editorial-note .quote-illustration { grid-column: 2; justify-self: end; width: 110px; height: 88px; }
+  .editorial-note.quote-compact { grid-template-columns: 1fr; }
+  .quote-compact .quote-illustration { grid-column: 1; }
 }
 
 .mobile-account-button { display: none; }
@@ -3568,3 +3550,43 @@ h1 em {
 }
 .journal-form .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .journal-invitation .green-dot { display: inline-block; width: 6px; height: 6px; margin-right: 8px; background: #71913b; border-radius: 50%; vertical-align: middle; }
+
+/* Visual check-ins and selectable journal layouts. */
+.journal-form .visual-rating { gap: 12px; }
+.visual-rating legend { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+.rating-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.form .rating-option { position: relative; display: block; cursor: pointer; min-width: 0; }
+.form .rating-option input[type="radio"] { position: absolute; width: 1px; height: 1px; opacity: 0; padding: 0; margin: 0; }
+.rating-option > span { display: grid; justify-items: center; align-content: center; gap: 10px; min-height: 84px; border: 1px solid #e5e5e5; border-radius: 14px; color: #777; background: #fafafa; transition: background .15s, border-color .15s; }
+.rating-option svg { width: 34px; height: 34px; }
+.rating-option small { font-size: 10px; text-align: center; }
+.rating-option input:checked + span { color: #222; background: #edf4cf; border-color: #b5cf65; }
+.rating-option input:focus-visible + span { outline: 2px solid #71913b; outline-offset: 3px; }
+.rating-option:hover > span { border-color: #98b650; }
+.journal-layout { display: flex; gap: 3px; background: #e8e8e8; padding: 4px; border-radius: 24px; flex-shrink: 0; }
+.journal-layout button { display: flex; gap: 7px; align-items: center; border-radius: 20px; padding: 9px 12px; font-size: 11px; color: #777; }
+.journal-layout button[aria-pressed="true"] { background: #fff; color: #181818; }
+.journal-history { align-items: start; }
+.journal-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.journal-tiles .journal-entry { padding: 22px; min-width: 0; }
+.journal-tiles summary { display: grid; gap: 24px; }
+.journal-tiles summary > div { gap: 22px; }
+.journal-rating-preview { display: flex; gap: 10px; }
+.journal-rating-preview > span { display: flex; align-items: center; justify-content: center; background: #f1f4e8; border-radius: 50%; width: 40px; height: 40px; color: #53672d !important; }
+.journal-rating-preview svg { width: 28px; height: 28px; }
+.journal-entry .journal-read { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: #333; justify-self: start; }
+.journal-read svg { transition: transform .2s; }
+.journal-entry[open] .journal-read svg { transform: rotate(90deg); }
+.journal-lines summary > div { display: flex; align-items: center; gap: 24px; }
+.journal-lines .journal-rating-preview > span { width: 32px; height: 32px; }
+.journal-lines .journal-rating-preview svg { width: 24px; height: 24px; }
+@media (max-width: 1100px) { .journal-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .journal-history-heading { flex-wrap: wrap; align-items: center; }
+  .journal-tiles { grid-template-columns: 1fr; }
+  .journal-lines summary > div { display: grid; gap: 12px; }
+  .rating-options { gap: 5px; }
+  .rating-option > span { min-height: 78px; border-radius: 11px; }
+  .rating-option svg { width: 28px; height: 28px; }
+  .rating-option small { font-size: 9px; }
+}

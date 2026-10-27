@@ -1,18 +1,7 @@
 import { DailyCheckIn, PrototypeState } from "./types";
 
-const prompts = [
-  "What gave you energy today, and what took it away?",
-  "When did you feel most like yourself today?",
-  "What did you need today that you could make room for tomorrow?",
-  "What is one thing you learned about yourself today?",
-  "Who or what helped you feel connected today?",
-  "What can you let go of for tonight?",
-  "What small moment would you like to remember?",
-];
-export function promptForDate(date: string): string {
-  const day = Math.floor(Date.parse(`${date}T12:00:00Z`) / 86400000);
-  return prompts[((day % prompts.length) + prompts.length) % prompts.length];
-}
+// Visual choices map to the existing 1–10 scale without rewriting old scores.
+export function ratingIndex(value: number) { return Math.max(0, Math.min(4, Math.round((value - 2) / 2))); }
 export function filterReflections(entries: DailyCheckIn[], from = "", to = ""): DailyCheckIn[] {
   return entries.filter((entry) => (!from || entry.date >= from) && (!to || entry.date <= to))
     .sort((a, b) => b.date.localeCompare(a.date));

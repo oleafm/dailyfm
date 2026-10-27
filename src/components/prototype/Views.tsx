@@ -18,7 +18,6 @@ import {
   Palette,
   Play,
   Plus,
-  Quote,
   Sparkles,
   Sprout,
   Users,
@@ -38,6 +37,7 @@ import { dateKey, duration, prettyDate, relativeDay } from "@/lib/prototype/seed
 import { chronologicalActivities, displayTime } from "@/lib/prototype/sessions";
 import { Empty, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
+import QuoteCard from "./QuoteCard";
 
 function ActivityTime({ activity }: { activity: Activity }) {
   const { startedAt, endedAt, recordedAt } = activity;
@@ -474,23 +474,7 @@ export function ProjectsView({
           <p>It doesn’t need a perfect plan.</p>
         </button>
       </div>
-      <blockquote className="editorial-note">
-        <Quote size={42} strokeWidth={1.5} aria-hidden="true" />
-        <div>
-          <span className="eyebrow">A little perspective</span>
-          <p>Progress is easier to see when you leave a little evidence behind.</p>
-        </div>
-        <img
-          className="quote-illustration"
-          src="/illustrations/perspective-planet.png"
-          alt=""
-          aria-hidden="true"
-          width={1536}
-          height={1024}
-          loading="lazy"
-          decoding="async"
-        />
-      </blockquote>
+
     </>
   );
 }
@@ -804,23 +788,7 @@ export function InsightsView({
           </article>
         ))}
       </div>
-      <blockquote className="editorial-note">
-        <Quote size={42} strokeWidth={1.5} aria-hidden="true" />
-        <div>
-          <span className="eyebrow">A little perspective</span>
-          <p>Patterns are invitations to get curious. They’re never a verdict.</p>
-        </div>
-        <img
-          className="quote-illustration"
-          src="/illustrations/perspective-planet.png"
-          alt=""
-          aria-hidden="true"
-          width={1536}
-          height={1024}
-          loading="lazy"
-          decoding="async"
-        />
-      </blockquote>
+      <QuoteCard weekly />
     </>
   );
 }

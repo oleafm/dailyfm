@@ -11,7 +11,6 @@ import {
   BriefcaseBusiness,
   Check,
   ChevronRight,
-  Compass,
   Feather,
   Grid2X2,
   Leaf,
@@ -38,6 +37,7 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
+import QuoteCard from "./QuoteCard";
 import ReflectView, { GuidedJournalForm } from "./ReflectView";
 import { saveReflection } from "@/lib/prototype/journal";
 import TimerCard, { clock } from "./TimerCard";
@@ -51,7 +51,6 @@ import {
 } from "./Forms";
 import {
   ActivityRows,
-  ChallengeTeaser,
   InsightsView,
   MemoriesView,
   PlanCard,
@@ -84,7 +83,6 @@ type Dialog = {
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
   { view: "projects", label: "Projects", icon: Feather },
-  { view: "memories", label: "Memories", icon: Compass },
   { view: "reflect", label: "Reflect", icon: Leaf },
   { view: "insights", label: "Weekly notes", icon: BookOpen },
 ];
@@ -493,10 +491,10 @@ function Workspace({
             <button
               className="sidebar-focus"
               onClick={() => startTimer()}
-              aria-label="Start focus"
+              aria-label="Start new focus"
             >
               <span className="sidebar-focus-play"><Play size={16} fill="currentColor" /></span>
-              <span>Start focus</span>
+              <span>Start new focus</span>
             </button>
           )}
           {!account && <button
@@ -688,20 +686,7 @@ function Workspace({
                     There was something else…
                   </button>
                 </section>
-                {state.challenges[0] ? (
-                  <ChallengeTeaser
-                    challenge={state.challenges[0]}
-                    completions={state.completions}
-                    onClick={() => navigate("memories")}
-                  />
-                ) : (
-                  <section className="card form">
-                    <p className="eyebrow">A LITTLE OUTSIDE THE EVERYDAY</p>
-                    <h2>Room for a first.</h2>
-                    <p className="muted">An invitation to try something new. Your own memories start here.</p>
-                    <button className="secondary-button" onClick={() => setDialog({ type: "challenge" })}>Set an invitation <Plus size={16} /></button>
-                  </section>
-                )}
+                <QuoteCard compact />
               </div>
             </>
           )}
