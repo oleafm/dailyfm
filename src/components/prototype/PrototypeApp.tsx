@@ -970,8 +970,8 @@ function Workspace({
       )}
       {dialog?.type === "session" && timer && (
         <Modal
-          title="What changed?"
-          eyebrow="A SESSION, WELL SPENT"
+          title="A moment, well spent."
+          eyebrow="YOUR FOCUS SESSION"
           onClose={close}
         >
           <SessionFinishForm

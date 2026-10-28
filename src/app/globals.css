@@ -1995,6 +1995,11 @@ h1 em {
   font-size: 9px;
 }
 .session-receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
   border-radius: 16px;
   padding: 23px;
   background: #f1f1f1;
@@ -3600,3 +3605,11 @@ h1 em {
   .rating-option svg { width: 28px; height: 28px; }
   .rating-option small { font-size: 9px; }
 }
+
+.session-receipt .session-date { color: #555; font-size: 12px; }
+.session-receipt .form-hint { margin: 0; }
+.session-area-field { display: grid; gap: 10px; color: #555; font-size: 12px; }
+.session-area-switch { justify-self: start; margin: 0; }
+.session-finish-actions { display: flex; align-items: stretch; gap: 12px; }
+.session-finish-actions .primary-button { flex: 1; margin: 0; min-width: 0; }
+.session-finish-actions .session-discard { background: transparent; color: #181818; border: 1px solid #ccc; margin: 0; }
