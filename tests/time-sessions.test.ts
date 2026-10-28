@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { emptyAccount } from "../src/lib/account/repository";
-import { chronologicalActivities, finishSession, SessionDetails } from "../src/lib/prototype/sessions";
+import { chronologicalActivities, displayTime, finishSession, SessionDetails } from "../src/lib/prototype/sessions";
 import { ActiveTimer, Activity } from "../src/lib/prototype/types";
 import { dateKey } from "../src/lib/prototype/seed";
 
@@ -63,3 +63,9 @@ describe("immediate focus and accurate time history", () => {
     assert.equal(activity.startedAt, undefined);
   });
 });
+
+ it("formats local clock times as hh:mm am/pm without changing stored timestamps", () => {
+   assert.equal(displayTime(new Date(2026, 9, 28, 19, 16, 35).toISOString()), "07:16 pm");
+   assert.equal(displayTime(new Date(2026, 9, 28, 0, 5, 50).toISOString()), "12:05 am");
+   assert.equal(displayTime(new Date(2026, 9, 28, 12, 9, 0).toISOString()), "12:09 pm");
+ });

@@ -1,6 +1,6 @@
 import { SVGProps } from "react";
 
-type Kind = "balance" | "steps" | "orbit" | "door" | "growth";
+type Kind = "balance" | "steps" | "orbit" | "door" | "growth" | "sprout";
 
 /** Original monochrome artwork, shared by the reflection and project cards. */
 export default function Illustration({
@@ -9,6 +9,19 @@ export default function Illustration({
 }: SVGProps<SVGSVGElement> & { kind?: Kind }) {
   return (
     <svg viewBox="0 0 220 150" fill="none" aria-hidden="true" {...props}>
+      {kind === "sprout" && (
+        <>
+          <path d="M22 139c15-26 42-38 68-35 20 2 35 9 45 19h24v7h25v9Z" fill="currentColor" />
+          <path d="M110 110c1-19-3-34-10-49m10 34c5-25 20-41 48-54" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M105 78C72 79 47 66 43 31c31-6 54 11 62 47Z" fill="currentColor" />
+          <path d="M63 43c15 6 27 16 39 31" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M114 74c6-33 27-53 67-47-2 33-22 47-67 47Z" fill="white" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M116 72c12-16 25-28 42-32M65 20c28-24 66-24 96 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <circle cx="28" cy="16" r="7" fill="currentColor" />
+          <path d="m183 80 14-9m-12 18 17-1m-19 11 14 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M67 119h23m17 11h18" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      )}
       {kind === "growth" && (
         <>
           <circle cx="171" cy="28" r="18" fill="currentColor" />

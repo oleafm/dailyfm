@@ -14,6 +14,7 @@ export const uid = () => crypto.randomUUID();
 const categories = [
   "Move",
   "Learn",
+  "Reading",
   "Create",
   "Explore",
   "People",
@@ -144,7 +145,6 @@ export function ActivityForm({
         });
       }}
     >
-      <p className="muted">The little things count, too.</p>
       <label>
         What did you make time for?
         <input

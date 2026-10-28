@@ -35,3 +35,5 @@ Other possible later improvements: a private journal export, optional reminders,
 ## Navigation and quote placement
 
 Memories is hidden from navigation for now; stored memories are retained. Today’s invitation is replaced by the perspective quote previously on Projects. Weekly Notes keeps its quote. Both use a shared black card with a small inline SVG planet illustration, replacing the raster artwork. The sidebar timer shortcut reads “Start new focus”.
+
+Visual style: Reflect icons use black and white, including mood/energy previews and selected form choices. Keep the established app palette; new colors require user approval.

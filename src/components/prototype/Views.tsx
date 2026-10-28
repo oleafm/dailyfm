@@ -38,14 +38,15 @@ import { chronologicalActivities, displayTime } from "@/lib/prototype/sessions";
 import { Empty, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
 import QuoteCard from "./QuoteCard";
+import { weeklySummary } from "@/lib/prototype/weekly";
 
 function ActivityTime({ activity }: { activity: Activity }) {
   const { startedAt, endedAt, recordedAt } = activity;
   const spansDays = startedAt && endedAt && dateKey(new Date(startedAt)) !== dateKey(new Date(endedAt));
   const time = (value: string) => <time dateTime={value}>{spansDays ? `${prettyDate(dateKey(new Date(value)))} · ` : ""}{displayTime(value)}</time>;
-  return <p className="activity-time">{startedAt
+  return <span className="activity-time">{startedAt
     ? <>{time(startedAt)}{endedAt ? <> — {time(endedAt)}</> : " · End time not recorded"}</>
-    : recordedAt ? <>Logged at {time(recordedAt)}</> : "Time not recorded"}</p>;
+    : recordedAt ? <>Logged at {time(recordedAt)}</> : "Time not recorded"}</span>;
 }
 
 export function ActivityRows({ activities, sessions = [] }: { activities: Activity[]; sessions?: TimerSession[] }) {
@@ -68,12 +69,13 @@ export function ActivityRows({ activities, sessions = [] }: { activities: Activi
           </span>
           <div>
             <h3>{a.title}</h3>
-            <p>
-              {a.category}
+            <p className="activity-meta">
+              <span>{a.category}
               {a.distanceKm !== undefined ? ` · ${a.distanceKm} km` : ""}
-              {a.minutes > 0 ? ` · ${duration(a.minutes)}` : ""}
+              {a.minutes > 0 ? ` · ${duration(a.minutes)}` : ""}</span>
+              <span aria-hidden="true"> · </span>
+              <ActivityTime activity={a} />
             </p>
-            <ActivityTime activity={a} />
             {a.note && <p className="activity-note">“{a.note}”</p>}
           </div>
           <span className={`area-label ${a.area}`}>
@@ -644,13 +646,16 @@ export function MemoriesView({
 export function InsightsView({
   state,
   onCheckIn,
+  onLogActivity,
+  onProject,
 }: {
   state: PrototypeState;
   onCheckIn: () => void;
+  onLogActivity: () => void;
+  onProject: (id?: string) => void;
 }) {
-  const recent = state.activities.filter(
-    (a) => a.date >= relativeDay(-6) && a.date <= relativeDay(0),
-  );
+  const from = relativeDay(-6), today = relativeDay(0);
+  const { recent, activeDays, checkInDays, project } = weeklySummary(state, from, today);
   const time = recent.reduce((sum, a) => sum + a.minutes, 0);
   const groups = recent.reduce<Record<string, number>>((all, a) => {
     all[a.category] = (all[a.category] || 0) + a.minutes;
@@ -671,33 +676,36 @@ export function InsightsView({
     };
   });
   const max = Math.max(60, ...days.map((d) => d.do + d.be));
-  const portfolio = recent.filter((a) => a.projectId === "portfolio");
-  const checkIns = state.checkIns.filter((c) => c.date >= relativeDay(-6));
   const insights: WeeklyInsight[] = [
     {
       id: "i1",
       eyebrow: "MORE THAN IT FELT LIKE",
-      title: `${recent.length} little pieces of evidence.`,
-      body: `You made room for ${recent.length} meaningful activities across ${new Set(recent.map((a) => a.date)).size} days. When a week feels like a blur, these small details tell a different story.`,
+      title: recent.length ? `${recent.length} little ${recent.length === 1 ? "piece" : "pieces"} of evidence.` : "Your next small step starts here.",
+      body: recent.length
+        ? `You logged ${recent.length} ${recent.length === 1 ? "activity" : "activities"} across ${activeDays} ${activeDays === 1 ? "day" : "days"} in the last seven days. Small moments count, even when the week feels like a blur.`
+        : "No activities logged in the last seven days. Make room for one small thing today—a focused session, a walk, or a moment to reflect.",
     },
     {
       id: "i2",
       eyebrow: "SOMETHING IS TAKING SHAPE",
-      title: "The work is adding up.",
-      body: `You returned to your portfolio on ${new Set(portfolio.map((a) => a.date)).size} days, giving it ${duration(portfolio.reduce((s, a) => s + a.minutes, 0))} of attention. That’s a real body of work, one session at a time.`,
+      title: project ? project.project.name : "A little step can start something.",
+      body: project
+        ? `You worked on ${project.project.name} on ${project.days} ${project.days === 1 ? "day" : "days"} in the last seven days${project.minutes > 0 ? `, with ${duration(project.minutes)} of logged time` : ""}. Each small step is something to build on.`
+        : "No project activity logged in the last seven days. Pick something you care about and take one small step today. Little steps, repeated over time, can bring real results.",
     },
     {
       id: "i3",
       eyebrow: "A LITTLE CURIOSITY",
-      title:
-        checkIns.length > 1
-          ? "Make room to notice."
-          : "How did it feel to be you?",
-      body:
-        checkIns.length > 1
-          ? `You checked in on ${checkIns.length} days this week. Your mood and movement can be useful things to notice together, without assuming one caused the other.`
-          : "A few gentle check-ins can help you notice what leaves you feeling a little more like yourself. No analysis needed. Start with today.",
+      title: checkInDays ? "Make room to notice." : "How did it feel to be you?",
+      body: checkInDays
+        ? `You reflected on ${checkInDays} ${checkInDays === 1 ? "day" : "days"} in the last seven days. Revisit those moments and notice what mattered to you.`
+        : "No reflections recorded in the last seven days. Take a moment to notice how you feel today. A few words—or just a check-in—are enough.",
     },
+  ];
+  const actions = [
+    { label: "Log an activity", run: onLogActivity },
+    { label: project ? "Continue this project" : "Choose a project", run: () => onProject(project?.project.id) },
+    { label: state.checkIns.some((entry) => entry.date === today) ? "Revisit today’s reflection" : "A moment to check in", run: onCheckIn },
   ];
   return (
     <>
@@ -770,7 +778,6 @@ export function InsightsView({
           <p className="eyebrow">PATTERN NOTES</p>
           <h2>A few things worth noticing.</h2>
         </div>
-        <span className="sample-label">Simulated insights · local history</span>
       </div>
       <div className="insight-grid">
         {insights.map((insight, i) => (
@@ -779,12 +786,10 @@ export function InsightsView({
             <p className="eyebrow">{insight.eyebrow}</p>
             <h2>{insight.title}</h2>
             <p>{insight.body}</p>
-            {i === 2 && (
-              <button className="text-button" onClick={onCheckIn}>
-                A moment to check in
-                <ArrowUpRight size={16} />
-              </button>
-            )}
+            <button className="text-button" onClick={actions[i].run}>
+              {actions[i].label}
+              <ArrowUpRight size={16} />
+            </button>
           </article>
         ))}
       </div>

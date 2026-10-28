@@ -15,7 +15,7 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
   const [title, setTitle] = useState(original?.title || "Focus session");
   const [projectId, setProjectId] = useState(original?.projectId || "");
   const [category, setCategory] = useState(original?.category || (area === "do" ? "Work" : "Rest"));
-  const categories = area === "do" ? ["Work", "Learn", "Create", "Admin", "Other"] : ["Move", "Learn", "Create", "Explore", "People", "Reflect", "Rest"];
+  const categories = area === "do" ? ["Work", "Learn", "Create", "Admin", "Other"] : ["Move", "Learn", "Reading", "Create", "Explore", "People", "Reflect", "Rest"];
   return (
     <form className="form" onSubmit={(event) => {
       event.preventDefault();

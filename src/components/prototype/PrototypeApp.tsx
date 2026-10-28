@@ -716,6 +716,8 @@ function Workspace({
             <InsightsView
               state={state}
               onCheckIn={() => setDialog({ type: "checkin" })}
+              onLogActivity={() => setDialog({ type: "activity" })}
+              onProject={(id) => navigate("projects", id)}
             />
           )}
           <footer className="page-footer">
@@ -825,7 +827,7 @@ function Workspace({
       )}
       {dialog?.type === "activity" && (
         <Modal
-          title="What did you make time for?"
+          title="The little things count, too."
           eyebrow={area === "do" ? "A LITTLE DO" : "A LITTLE BE"}
           onClose={close}
         >

@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Leaf, LayoutGrid, List } from "lucide-react";
+import { ArrowRight, Check, LayoutGrid, List } from "lucide-react";
 import { DailyCheckIn } from "@/lib/prototype/types";
 import { prettyDate, relativeDay } from "@/lib/prototype/seed";
 import { filterReflections } from "@/lib/prototype/journal";
 import { Empty, SectionHeading } from "./UI";
+import Illustration from "./Illustration";
 import { MoodIcon, EnergyIcon, moodLabels, energyLabels, ratingIndex } from "./ReflectionIcons";
 
 export function GuidedJournalForm({ existing, date, onSave }: {
@@ -13,8 +14,8 @@ export function GuidedJournalForm({ existing, date, onSave }: {
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(existing?.mood ?? 6);
   const [energy, setEnergy] = useState(existing?.energy ?? 6);
-  const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { heading.current?.focus(); }, [step]);
+  const progress = useRef<HTMLDivElement>(null);
+  useEffect(() => { progress.current?.focus(); }, [step]);
   return <form className="form journal-form" onSubmit={(event) => {
     event.preventDefault();
     if (step !== 1) { setStep(step + 1); return; }
@@ -25,11 +26,9 @@ export function GuidedJournalForm({ existing, date, onSave }: {
       reflection: { id: existing?.reflection.id || crypto.randomUUID(), date, text: text("mind") },
     });
   }}>
-    <div className="journal-progress" aria-label={`Step ${step + 1} of 2`}>
+    <div ref={progress} tabIndex={-1} className="journal-progress" aria-label={`Step ${step + 1} of 2`}>
       {["Arrive", "Look back"].map((name, index) => <span key={name} className={index <= step ? "active" : ""}>{index + 1} · {name}</span>)}
     </div>
-    <h3 ref={heading} tabIndex={-1}>{["How are you arriving?", "Make a little sense of today."][step]}</h3>
-    <p className="form-hint">{prettyDate(date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · One entry per day. Revisit it whenever you like.</p>
     <fieldset hidden={step !== 0}>
       <legend className="sr-only">Mood and energy</legend>
       <fieldset className="visual-rating"><legend>How do you feel?</legend>
@@ -76,13 +75,16 @@ export default function ReflectView({ entries, onWrite }: { entries: DailyCheckI
         <h2>{todayEntry ? "There is always room for another thought." : "Pause. Notice. Make room for you."}</h2>
         <p>A few gentle questions about how you feel and what mattered today. Two minutes is enough.</p>
         <button className="primary-button" onClick={() => onWrite(today)}>{todayEntry ? "Revisit today" : "Start today’s reflection"}<ArrowRight size={16} /></button>
-      </div><Leaf size={64} strokeWidth={1} aria-hidden="true" />
+      </div><Illustration kind="sprout" className="journal-sprout" />
     </section>
     <div className="journal-history-heading"><div><p className="eyebrow">YOUR JOURNAL</p><h2>The days, in your words.</h2></div><div className="journal-layout" role="group" aria-label="Journal layout"><button aria-label="Tiles" aria-pressed={layout === "tiles"} onClick={() => changeLayout("tiles")}><LayoutGrid size={16} />Tiles</button><button aria-label="Lines" aria-pressed={layout === "lines"} onClick={() => changeLayout("lines")}><List size={16} />Lines</button></div></div>
     <div className="journal-filters">
       <label>From<input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} /></label>
       <label>To<input type="date" value={to} min={from || undefined} max={today} onChange={(e) => setTo(e.target.value)} /></label>
-      <button className="secondary-button" onClick={() => { setFrom(relativeDay(-6)); setTo(today); }}>Last 7 days</button>
+      <div className="journal-filter-control" role="group" aria-labelledby="journal-filter-label">
+        <span id="journal-filter-label">Filter</span>
+        <button className="secondary-button journal-range-button" onClick={() => { setFrom(relativeDay(-6)); setTo(today); }}>Last 7 days</button>
+      </div>
       {(from || to) && <button className="text-button" onClick={() => { setFrom(""); setTo(""); }}>Clear dates</button>}
     </div>
     <p className="form-hint" role="status">{invalidRange ? "Choose an end date on or after the start date." : `${filtered.length} ${filtered.length === 1 ? "entry" : "entries"} · newest first`}</p>

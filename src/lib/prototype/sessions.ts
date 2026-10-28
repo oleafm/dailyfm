@@ -58,5 +58,5 @@ export function chronologicalActivities(activities: Activity[], sessions: TimerS
 }
 
 export function displayTime(value: string): string {
-  return new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  return new Date(value).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }).toLowerCase();
 }
