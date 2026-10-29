@@ -3612,4 +3612,3 @@ h1 em {
 .session-area-switch { justify-self: start; margin: 0; }
 .session-finish-actions { display: flex; align-items: stretch; gap: 12px; }
 .session-finish-actions .primary-button { flex: 1; margin: 0; min-width: 0; }
-.session-finish-actions .session-discard { background: transparent; color: #181818; border: 1px solid #ccc; margin: 0; }

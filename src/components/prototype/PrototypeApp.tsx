@@ -981,10 +981,6 @@ function Workspace({
             projects={state.projects}
             initialArea={area}
             onSave={saveSession}
-            onDiscard={() => {
-              setTimer(null);
-              announce("A little breathing room. Session discarded.", false);
-            }}
           />
         </Modal>
       )}
