@@ -29,8 +29,9 @@ export function finishSession(state: PrototypeState, timer: ActiveTimer, seconds
   let taskId = tasks.find((task) => task.id === details.taskId)?.id;
   if (details.createTask) {
     taskId = makeId();
-    tasks = [...tasks, { id: taskId, title, area: details.area, category, projectId, completed: false }];
+    tasks = [...tasks, { id: taskId, title, area: details.area, category, projectId, completed: false, status: "in_progress" }];
   }
+  if (taskId) tasks = tasks.map((task) => task.id === taskId && !task.completed ? { ...task, status: "in_progress" } : task);
   return {
     ...state, projects, tasks,
     sessions: [...state.sessions, { id, taskId, title, area: details.area, category, projectId, startedAt: timer.startedAt, endedAt, durationSeconds, date, note: details.note.trim() }],

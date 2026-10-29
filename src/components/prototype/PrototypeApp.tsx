@@ -27,6 +27,8 @@ import {
   Activity,
   Area,
   View,
+  Task,
+  TaskStatus,
 } from "@/lib/prototype/types";
 import {
   duration,
@@ -37,6 +39,8 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
+import TasksView from "./TasksView";
+import { changeTaskStatus, editTaskSession, taskStatus } from "@/lib/prototype/tasks";
 import QuoteCard from "./QuoteCard";
 import ReflectView, { GuidedJournalForm } from "./ReflectView";
 import { saveReflection } from "@/lib/prototype/journal";
@@ -82,21 +86,24 @@ type Dialog = {
 };
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
+  { view: "tasks", label: "Tasks", icon: BriefcaseBusiness },
   { view: "projects", label: "Projects", icon: Feather },
   { view: "reflect", label: "Reflect", icon: Leaf },
   { view: "insights", label: "Weekly notes", icon: BookOpen },
 ];
 const TIMER_KEY = "timerfm-active-timer-v1";
-export default function PrototypeApp(props: { initialView?: View; initialProject?: string | null }) {
+export default function PrototypeApp(props: { initialView?: View; initialProject?: string | null; initialTask?: string | null }) {
   return <AccountGate>{(account) => <Workspace key={account?.id || "demo"} {...props} account={account} />}</AccountGate>;
 }
 function Workspace({
   initialView = "today",
   initialProject = null,
+  initialTask = null,
   account,
 }: {
   initialView?: View;
   initialProject?: string | null;
+  initialTask?: string | null;
   account: AccountUser | null;
 }) {
   const { state, setState, ready: dataReady, status: saveStatus, error: saveError, retry, loadCloud } = useWorkspace(account);
@@ -109,6 +116,7 @@ function Workspace({
     [selectedProject, setSelectedProject] = useState<string | null>(
       initialProject,
     );
+  const [selectedTask, setSelectedTask] = useState<string | null>(initialTask);
   const [dialog, setDialog] = useState<Dialog | null>(null),
     [toast, setToast] = useState("");
   const [timer, setTimer] = useState<ActiveTimer | null>(null),
@@ -131,7 +139,7 @@ function Workspace({
       const stored = JSON.parse(localStorage.getItem(timerKey) || "null");
       if (
         stored &&
-        (!stored.taskId || state.tasks.some((t) => t.id === stored.taskId)) &&
+        (!stored.taskId || state.tasks.some((t) => t.id === stored.taskId && !t.completed && !t.archivedAt)) &&
         typeof stored.elapsed === "number" &&
         (stored.runningSince === null ||
           typeof stored.runningSince === "number")
@@ -143,10 +151,12 @@ function Workspace({
     const restoreLocation = () => {
       const params = new URLSearchParams(window.location.search);
       const requested = params.get("view");
+      const taskPath = window.location.pathname.match(/^\/tasks\/([^/]+)\/?$/);
+      setSelectedTask(taskPath ? decodeURIComponent(taskPath[1]) : null);
       setView(
-        navigation.some((n) => n.view === requested)
+        taskPath || window.location.pathname === "/tasks" ? "tasks" : navigation.some((n) => n.view === requested)
           ? (requested as View)
-          : initialView,
+          : window.location.pathname === "/" ? "today" : initialView,
       );
       setSelectedProject(
         params.get("project") || (requested ? null : initialProject),
@@ -229,6 +239,7 @@ function Workspace({
     nextArea: Area = area,
   ) {
     setView(next);
+    setSelectedTask(null);
     setArea(nextArea);
     setSelectedProject(project);
     setMobileMenu(false);
@@ -237,7 +248,17 @@ function Workspace({
     window.history.pushState(null, "", `/?${params}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  function openTask(id: string, taskArea?: Area) {
+    const task = state.tasks.find((task) => task.id === id);
+    setView("tasks"); setSelectedTask(id); setSelectedProject(null); setMobileMenu(false);
+    if (task || taskArea) setArea(taskArea || task!.area);
+    window.history.pushState(null, "", `/tasks/${encodeURIComponent(id)}?area=${taskArea || task?.area || area}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   function startTimer(id?: string) {
+    const selected = state.tasks.find((task) => task.id === id);
+    if (selected?.completed || selected?.archivedAt) { setToast("Reopen or restore this task before starting focus."); return; }
+
     if (timer && id && timer.taskId !== id) {
       setToast("Finish your current session first. One thing at a time.");
       navigate("today");
@@ -245,6 +266,7 @@ function Workspace({
     }
     const time = Date.now();
     setNow(time);
+    if (id) setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id && !task.completed ? { ...task, status: "in_progress" } : task) }));
     setTimer((current) =>
       current
         ? { ...current, endedAt: undefined, runningSince: current.runningSince || time }
@@ -300,41 +322,24 @@ function Workspace({
     setTimer(null);
     announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus on this device.`, "session");
   }
+  function setTaskStatus(id: string, status: TaskStatus) {
+    const task = state.tasks.find((task) => task.id === id);
+    if (!task || taskStatus(task) === status) return;
+    const at = Date.now();
+    setState((current) => changeTaskStatus(current, id, status, timer, at, uid));
+    if (status === "done" && timer?.taskId === id) { setTimer(null); close(); }
+    if (status === "done") celebrate("task", `Completed “${task.title}”.${timer?.taskId === id ? " Your focus session was saved too." : " One small step forward."}`);
+  }
   function toggleTask(id: string) {
-    const task = state.tasks.find((t) => t.id === id);
-    if (!task) return;
-    if (timer?.taskId === id && !task.completed) {
-      setToast("Save your focus session before completing this task.");
-      return;
-    }
-    setState((s) => ({
-      ...s,
-      tasks: s.tasks.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t,
-      ),
-      activities: task.completed
-        ? s.activities.filter((a) => a.id !== `task-${id}`)
-        : [
-            ...s.activities,
-            {
-              id: `task-${id}`,
-              title: task.title,
-              recordedAt: new Date().toISOString(),
-              date: today,
-              area: task.area,
-              category: task.category,
-              kind: "task",
-              minutes: 0,
-              projectId: task.projectId,
-              source: "manual",
-            },
-          ],
-    }));
-    if (!task.completed) celebrate("task", `Completed “${task.title}”. One small step forward.`);
-    else {
-      setCelebration(null);
-      setToast("A little more room to work on this.");
-    }
+    const task = state.tasks.find((task) => task.id === id);
+    if (task) setTaskStatus(id, task.completed ? "todo" : "done");
+  }
+  function editTask(id: string, changes: Partial<Pick<Task, "title" | "description" | "notes">>) {
+    setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id ? { ...task, ...changes } : task) }));
+  }
+  function archiveTask(id: string, archived: boolean) {
+    if (archived && timer?.taskId === id) { setToast("Finish your focus session before archiving this task."); return; }
+    setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id ? { ...task, archivedAt: archived ? new Date().toISOString() : undefined } : task) }));
   }
   function updateMilestone(projectId: string, id?: string, title?: string) {
     const project = state.projects.find((p) => p.id === projectId);
@@ -657,6 +662,7 @@ function Workspace({
                   tasks={state.tasks}
                   onToggle={toggleTask}
                   onFocus={focusTask}
+                  onOpen={openTask}
                   onNew={() => setDialog({ type: "task" })}
                   onCategory={(category) =>
                     setDialog({ type: "activity", category })
@@ -690,6 +696,10 @@ function Workspace({
               </div>
             </>
           )}
+          {view === "tasks" && <TasksView state={state} selected={selectedTask} timer={timer} seconds={seconds}
+            onOpen={openTask} onBack={() => navigate("tasks")} onNew={() => setDialog({ type: "task" })}
+            onToggle={toggleTask} onStatus={setTaskStatus} onFocus={(id) => startTimer(id)} onEdit={editTask} onArchive={archiveTask}
+            onSession={(id, taskId, note) => setState((current) => editTaskSession(current, id, taskId, note))} />}
           {view === "projects" && (
             <ProjectsView
               state={state}
@@ -698,6 +708,7 @@ function Workspace({
               onNew={() => setDialog({ type: "project" })}
               onMilestone={updateMilestone}
               onToggleTask={toggleTask}
+              onOpenTask={openTask}
               onFocus={focusTask}
               onNewTask={() => setDialog({ type: "task" })}
             />
@@ -820,6 +831,7 @@ function Workspace({
             onSave={(task) => {
               setState((s) => ({ ...s, tasks: [...s.tasks, task] }));
               setArea(task.area);
+              if (task.area === "do") openTask(task.id, task.area);
               announce(`Added “${task.title}”. A small intention, ready when you are.`);
             }}
           />

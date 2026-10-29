@@ -90,10 +90,12 @@ export function TaskList({
   tasks,
   onToggle,
   onFocus,
+  onOpen,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
   onFocus: (id: string) => void;
+  onOpen: (id: string) => void;
 }) {
   return (
     <div className="task-list">
@@ -106,15 +108,19 @@ export function TaskList({
             className="task-check"
             aria-label={`${t.completed ? "Reopen" : "Complete"} ${t.title}`}
             aria-pressed={t.completed}
+            disabled={!!t.archivedAt}
             onClick={() => onToggle(t.id)}
           >
             {t.completed && <Check size={13} />}
           </button>
           <div>
-            <span>{t.title}</span>
+            <a href={`/tasks/${encodeURIComponent(t.id)}`} onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault(); onOpen(t.id);
+            }}>{t.title}</a>
             <small>{t.category}</small>
           </div>
-          {!t.completed && (
+          {!t.completed && !t.archivedAt && (
             <button
               className="task-play"
               aria-label={`Focus on ${t.title}`}
@@ -138,6 +144,7 @@ export function PlanCard({
   onFocus,
   onNew,
   onCategory,
+  onOpen,
 }: {
   area: Area;
   tasks: Task[];
@@ -145,6 +152,7 @@ export function PlanCard({
   onFocus: (id: string) => void;
   onNew: () => void;
   onCategory: (category: string) => void;
+  onOpen: (id: string) => void;
 }) {
   return (
     <section className="card plan-card">
@@ -175,9 +183,10 @@ export function PlanCard({
         </div>
       )}
       <TaskList
-        tasks={tasks.filter((t) => t.area === area)}
+        tasks={tasks.filter((t) => t.area === area && !t.archivedAt)}
         onToggle={onToggle}
         onFocus={onFocus}
+        onOpen={onOpen}
       />
       <p className="card-footnote">
         {area === "do"
@@ -263,6 +272,7 @@ export function ProjectsView({
   onToggleTask,
   onFocus,
   onNewTask,
+  onOpenTask,
 }: {
   state: PrototypeState;
   selected: string | null;
@@ -272,6 +282,7 @@ export function ProjectsView({
   onToggleTask: (id: string) => void;
   onFocus: (id: string) => void;
   onNewTask: () => void;
+  onOpenTask: (id: string) => void;
 }) {
   const project = state.projects.find((p) => p.id === selected);
   const [milestone, setMilestone] = useState("");
@@ -373,9 +384,10 @@ export function ProjectsView({
               onAction={onNewTask}
             />
             <TaskList
-              tasks={state.tasks.filter((t) => t.projectId === project.id)}
+              tasks={state.tasks.filter((t) => t.projectId === project.id && !t.archivedAt)}
               onToggle={onToggleTask}
               onFocus={onFocus}
+              onOpen={onOpenTask}
             />
           </section>
         </div>

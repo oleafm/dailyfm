@@ -11,14 +11,15 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
 }) {
   const original = tasks.find((task) => task.id === timer.taskId);
   const [area, setArea] = useState<Area>(timer.area || original?.area || initialArea);
-  const [taskId, setTaskId] = useState(original?.projectId ? original.id : "");
+  const [taskId, setTaskId] = useState(original?.id || "");
   const [title, setTitle] = useState(original?.title || "Focus session");
   const [projectId, setProjectId] = useState(original?.projectId || "");
   const [category, setCategory] = useState(original?.category || (area === "do" ? "Work" : "Rest"));
   const categories = area === "do" ? ["Work", "Learn", "Create", "Admin", "Other"] : ["Move", "Learn", "Reading", "Create", "Explore", "People", "Reflect", "Rest"];
   const hasProject = projectId === "__new" || projects.some((project) => project.id === projectId);
-  const projectTasks = tasks.filter((task) => task.projectId === projectId && task.area === area && (!task.completed || task.id === original?.id));
-  const selectedTaskId = hasProject && (taskId === "__new" || projectTasks.some((task) => task.id === taskId)) ? taskId : "";
+  const projectTasks = tasks.filter((task) => task.projectId === projectId && task.area === area && !task.archivedAt && (!task.completed || task.id === original?.id));
+  const linkedStandaloneTask = !projectId && original?.id === taskId && !original.projectId && original.area === area;
+  const selectedTaskId = (hasProject || linkedStandaloneTask) && (linkedStandaloneTask || taskId === "__new" || projectTasks.some((task) => task.id === taskId)) ? taskId : "";
   return (
     <form className="form session-finish-form" onSubmit={(event) => {
       event.preventDefault();

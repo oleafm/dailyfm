@@ -50,6 +50,9 @@ export function TaskForm({
               ? String(f.get("category"))
               : projects.find((p) => p.id === projectId)?.name || "Personal",
           completed: false,
+          status: "todo",
+          description: String(f.get("description") || "").trim(),
+          notes: [],
         });
       }}
     >
@@ -64,6 +67,9 @@ export function TaskForm({
           maxLength={100}
           placeholder="Give the case study a clearer story"
         />
+      </label>
+      <label>Description <span className="optional">optional</span>
+        <textarea name="description" rows={3} maxLength={6000} placeholder="What does this task involve? What will done look like?" />
       </label>
       <label>
         A little output, or a little experience?

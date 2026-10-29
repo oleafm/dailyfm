@@ -3612,3 +3612,63 @@ h1 em {
 .session-area-switch { justify-self: start; margin: 0; }
 .session-finish-actions { display: flex; align-items: stretch; gap: 12px; }
 .session-finish-actions .primary-button { flex: 1; margin: 0; min-width: 0; }
+
+/* Lasting tasks: monochrome detail pages and session history. */
+.task-row > div > a { font-size: 12px; line-height: 1.5; color: #333; font-weight: 500; text-decoration: none; overflow-wrap: anywhere; }
+.task-row > div > a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.task-row.completed > div > a { text-decoration: line-through; color: #999; }
+.task-check:disabled { cursor: default; opacity: .5; }
+.task-index-actions { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+.task-index-list { padding: 24px; }
+.task-detail-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+.task-detail-heading .page-intro { min-width: 0; }
+.task-detail-heading h1 { overflow-wrap: anywhere; }
+.task-detail-actions { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+.task-stat-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin: 24px 0; }
+.task-stat-grid > div { padding: 24px; display: grid; gap: 10px; min-width: 0; }
+.task-stat-grid strong { font-size: 28px; font-weight: 650; letter-spacing: -.8px; font-variant-numeric: tabular-nums; }
+.task-stat-grid span { font-size: 11px; color: #777; }
+.task-workspace-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; align-items: start; }
+.task-workspace-grid > section { padding: 26px; min-width: 0; }
+.task-workspace-grid .section-heading { margin-bottom: 24px; }
+.task-workspace-grid .section-heading h2, .task-session-history h2 { font-size: 21px; }
+.task-inline-actions { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.task-inline-actions > span { font-size: 12px; }
+.task-note-list { display: grid; gap: 22px; margin-top: 26px; }
+.task-note-list article { border-top: 1px solid #eee; padding-top: 20px; min-width: 0; }
+.task-note-list time { color: #888; font-size: 10px; }
+.task-note-list article > p { font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 12px; }
+.task-note-list .text-button { font-size: 10px; }
+.task-session-history { padding: 28px; margin-top: 24px; }
+.task-session-history > .form-hint { margin: 12px 0 24px; }
+.task-session { border-top: 1px solid #eee; padding: 20px 0; }
+.task-session-heading { display: flex; justify-content: space-between; gap: 20px; align-items: start; }
+.task-session-heading time { font-size: 13px; font-weight: 600; }
+.task-session-heading p { font-size: 11px; color: #777; margin-top: 7px; }
+.task-session-heading strong { font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; flex-shrink: 0; }
+.task-session-heading small { display: block; font-size: 9px; color: #888; font-weight: 400; margin-top: 5px; }
+.task-session-note { margin: 14px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; }
+.task-session > .text-button { font-size: 10px; margin-top: 14px; }
+.task-session-editor { margin-top: 20px; max-width: 560px; }
+.task-archive-action { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 24px; }
+.task-archive-action p { font-size: 11px; color: #888; line-height: 1.7; }
+.task-archive-action button { white-space: nowrap; }
+.task-active-timer { padding: 16px 20px; border: 1px solid #ccc; border-radius: 14px; background: #fff; font-size: 13px; font-weight: 600; }
+.task-active-timer span { display: block; font-size: 11px; color: #777; margin-top: 8px; font-weight: 400; }
+@media (max-width: 1100px) {
+  .task-detail-heading { flex-direction: column; gap: 4px; }
+  .task-detail-actions { margin-bottom: 16px; }
+  .task-workspace-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .task-stat-grid { gap: 8px; }
+  .task-stat-grid > div { padding: 16px 10px; }
+  .task-stat-grid strong { font-size: 19px; letter-spacing: -.5px; }
+  .task-stat-grid span { font-size: 9px; line-height: 1.5; }
+  .task-workspace-grid > section, .task-session-history { padding: 22px; }
+  .task-session-heading { gap: 12px; }
+  .task-session-heading time { font-size: 12px; }
+  .task-session-heading strong { font-size: 17px; }
+  .task-session-heading p { font-size: 10px; line-height: 1.6; }
+  .task-archive-action { align-items: start; flex-direction: column; gap: 12px; }
+}

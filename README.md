@@ -45,3 +45,7 @@ The prototype was checked in Chromium for task creation and completion; Do / Be 
 ## Reflect
 
 Guided daily journaling with mood and energy, reflection prompts, editable history, and date filters. Uses existing private check-in storage. See [Reflect design and future weekly AI concept](docs/REFLECT.md); AI is not enabled. Run `npm run test:journal` for journal behavior checks.
+
+## Task pages
+
+Open a task’s name to see its description, progress notes, total focused time, and session history. Completing a task automatically saves its active session. See [task behavior and storage](docs/TASKS.md). Run `npm run test:tasks` for lifecycle and time-accounting checks.

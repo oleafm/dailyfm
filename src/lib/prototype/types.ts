@@ -1,5 +1,5 @@
 export type Area = "do" | "be";
-export type View = "today" | "projects" | "memories" | "insights" | "reflect";
+export type View = "today" | "projects" | "memories" | "insights" | "reflect" | "tasks";
 export interface User {
   id: string;
   name: string;
@@ -16,6 +16,13 @@ export interface Project {
   color: string;
   milestones: Milestone[];
 }
+export type TaskStatus = "todo" | "in_progress" | "done";
+export interface TaskNote {
+  id: string;
+  text: string;
+  createdAt: string;
+  updatedAt?: string;
+}
 export interface Task {
   id: string;
   title: string;
@@ -23,6 +30,10 @@ export interface Task {
   category: string;
   projectId?: string;
   completed: boolean;
+  description?: string;
+  status?: TaskStatus;
+  notes?: TaskNote[];
+  archivedAt?: string;
 }
 export interface TimerSession {
   id: string;
