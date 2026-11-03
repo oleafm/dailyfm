@@ -1,6 +1,8 @@
 # Tasks
 
-Tasks have their own pages at `/tasks/{id}` and an index at `/tasks`. They can also be opened from Today and project task lists by clicking the task name; the checkbox still completes/reopens the task directly.
+Tasks have their own detail pages at `/tasks/{id}`, accessed from their parent project (or an existing Today task). There is no Tasks navigation tab or global task index; `/tasks` redirects to Projects. Task pages return to the parent project, or the projects overview for standalone legacy tasks. The checkbox still completes/reopens the task directly.
+
+Project pages show two columns: project tasks on the left, with a black “Add a Task” action and Open / Done / Archived filters; today’s completed tasks for that project on the right. The completion feed excludes other dates, other projects, reopened tasks, and legacy milestone events. The columns stack on mobile. Milestone controls are removed; existing milestone data is retained. Starting focus from a project keeps the user on that project, including when another timer needs attention.
 
 A task has a title, optional description, To do / In progress / Done status, and a stream of dated progress notes. Notes can be edited and deleted, with confirmation before deletion. Existing project links are displayed, but there are no project assignment or move controls on the task page. Existing creation flows are preserved.
 
@@ -10,7 +12,7 @@ Start focus links a timer to the task and marks it In progress. Completing a tas
 
 A session’s note or task assignment can be corrected from its history entry. This updates the saved session and matching activity record together, keeping the original duration and timestamps. Project attribution follows the target task’s existing link; the task itself is never moved.
 
-Archiving hides tasks from active lists while retaining their sessions, descriptions, and notes. Archived tasks can be viewed and restored from the task index. An active task must have its session finished before archiving. Task deletion is not offered.
+Archiving hides tasks from active lists while retaining their sessions, descriptions, and notes. Archived tasks can be viewed and restored from the parent project’s Archived filter. An active task must have its session finished before archiving. Task deletion is not offered.
 
 ## Storage
 

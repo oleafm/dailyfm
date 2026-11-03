@@ -6,13 +6,12 @@ import { taskHistory, taskStatus } from "@/lib/prototype/tasks";
 import { displayTime } from "@/lib/prototype/sessions";
 import { dateKey, prettyDate } from "@/lib/prototype/seed";
 import { clock } from "./TimerCard";
-import { TaskList } from "./Views";
 import { Empty, SectionHeading } from "./UI";
 const statusNames = { todo: "To do", in_progress: "In progress", done: "Done" };
 type TaskChanges = Pick<Task, "title" | "description" | "notes">;
 interface Props {
   state: PrototypeState; selected: string | null; timer: ActiveTimer | null; seconds: number;
-  onOpen: (id: string) => void; onBack: () => void; onNew: () => void;
+  onBack: () => void;
   onToggle: (id: string) => void; onFocus: (id: string) => void;
   onStatus: (id: string, status: TaskStatus) => void;
   onEdit: (id: string, changes: Partial<TaskChanges>) => void;
@@ -20,21 +19,13 @@ interface Props {
   onSession: (id: string, taskId: string, note: string) => void;
 }
 export default function TasksView(props: Props) {
-  const [filter, setFilter] = useState("open");
   const task = props.state.tasks.find((task) => task.id === props.selected);
-  if (props.selected) return task ? <TaskDetail key={task.id} {...props} task={task} /> : <>
-    <button className="text-button back-link" onClick={props.onBack}><ArrowLeft size={16} />All tasks</button>
+  return task ? <TaskDetail key={task.id} {...props} task={task} /> : <>
+    <button className="text-button back-link" onClick={props.onBack}><ArrowLeft size={16} />All projects</button>
     <Empty>This task isn’t available in your account.</Empty>
   </>;
-  const tasks = props.state.tasks.filter((task) => filter === "archived" ? !!task.archivedAt : !task.archivedAt && (filter === "all" || (filter === "open" ? !task.completed : taskStatus(task) === filter)));
-  return <>
-    <div className="page-intro"><p className="eyebrow">ONE STEP AT A TIME</p><h1>Your tasks.</h1><p>A home for the work that takes more than one sitting.</p></div>
-    <div className="task-index-actions"><div className="filter-tabs" role="group" aria-label="Filter tasks">{[["open", "Open"], ["done", "Done"], ["all", "All"], ["archived", "Archived"]].map(([value, label]) => <button key={value} aria-pressed={filter === value} className={filter === value ? "active" : ""} onClick={() => setFilter(value)}>{label}</button>)}</div>
-      <button className="primary-button" onClick={props.onNew}><Plus size={16} />Add a task</button>
-    </div>
-    <section className="card task-index-list"><TaskList tasks={tasks} onToggle={props.onToggle} onFocus={props.onFocus} onOpen={props.onOpen} /></section>
-  </>;
 }
+
 function TaskDetail(props: Props & { task: Task }) {
   const { task, state, timer, seconds } = props;
   const history = taskHistory(state, task.id);
@@ -51,7 +42,7 @@ function TaskDetail(props: Props & { task: Task }) {
   const status = taskStatus(task);
   const patchNotes = (notes: TaskNote[]) => props.onEdit(task.id, { notes });
   return <div className="task-detail">
-    <button className="text-button back-link" onClick={props.onBack}><ArrowLeft size={16} />All tasks</button>
+    <button className="text-button back-link" onClick={props.onBack}><ArrowLeft size={16} />{task.projectId ? "Back to project" : "All projects"}</button>
     <div className="task-detail-heading"><div className="page-intro"><p className="eyebrow">{task.area === "do" ? "SOMETHING YOU’RE MOVING FORWARD" : "SOMETHING YOU’RE MAKING ROOM FOR"}</p><h1>{task.title}</h1>
       <p>{statusNames[status]}{task.projectId && state.projects.find((project) => project.id === task.projectId) ? ` · ${state.projects.find((project) => project.id === task.projectId)!.name}` : ""}{task.archivedAt ? " · Archived" : ""}</p></div>
       <div className="task-detail-actions">{!task.archivedAt && <>

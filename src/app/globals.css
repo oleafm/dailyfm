@@ -3618,8 +3618,6 @@ h1 em {
 .task-row > div > a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .task-row.completed > div > a { text-decoration: line-through; color: #999; }
 .task-check:disabled { cursor: default; opacity: .5; }
-.task-index-actions { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
-.task-index-list { padding: 24px; }
 .task-detail-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
 .task-detail-heading .page-intro { min-width: 0; }
 .task-detail-heading h1 { overflow-wrap: anywhere; }
@@ -3672,3 +3670,12 @@ h1 em {
   .task-session-heading p { font-size: 10px; line-height: 1.6; }
   .task-archive-action { align-items: start; flex-direction: column; gap: 12px; }
 }
+
+.project-workspace { align-items: start; }
+.project-tasks-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.project-tasks-heading .section-heading { margin: 0; }
+.project-tasks-heading .primary-button { flex-shrink: 0; }
+.project-task-filters { margin-bottom: 16px; }
+.project-workspace .project-journal { margin-top: 0; }
+.project-journal .activity-row h3 a { color: inherit; text-decoration: none; }
+.project-journal .activity-row h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }

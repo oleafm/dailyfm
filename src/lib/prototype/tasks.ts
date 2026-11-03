@@ -38,3 +38,8 @@ export function editTaskSession(state: PrototypeState, sessionId: string, taskId
     activities: state.activities.map((item) => item.id === `session-${sessionId}` ? { ...item, projectId: task.projectId, area: task.area, category: task.category, note: note.trim() } : item),
   };
 }
+
+export function projectCompletions(state: PrototypeState, projectId: string, date: string) {
+  const completed = new Set(state.tasks.filter((task) => task.projectId === projectId && task.completed).map((task) => `task-${task.id}`));
+  return state.activities.filter((activity) => activity.projectId === projectId && activity.date === date && activity.kind === "task" && completed.has(activity.id));
+}

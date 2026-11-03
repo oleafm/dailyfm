@@ -7,7 +7,6 @@ import {
   BookOpen,
   Check,
   ChevronRight,
-  Circle,
   Compass,
   Feather,
   Footprints,
@@ -39,6 +38,7 @@ import { Empty, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
 import QuoteCard from "./QuoteCard";
 import { weeklySummary } from "@/lib/prototype/weekly";
+import { projectCompletions } from "@/lib/prototype/tasks";
 
 function ActivityTime({ activity }: { activity: Activity }) {
   const { startedAt, endedAt, recordedAt } = activity;
@@ -49,7 +49,7 @@ function ActivityTime({ activity }: { activity: Activity }) {
     : recordedAt ? <>Logged at {time(recordedAt)}</> : "Time not recorded"}</span>;
 }
 
-export function ActivityRows({ activities, sessions = [] }: { activities: Activity[]; sessions?: TimerSession[] }) {
+export function ActivityRows({ activities, sessions = [], onOpenTask }: { activities: Activity[]; sessions?: TimerSession[]; onOpenTask?: (id: string) => void }) {
   if (!activities.length)
     return (
       <Empty>A little breathing room. There’s nothing logged here yet.</Empty>
@@ -68,7 +68,10 @@ export function ActivityRows({ activities, sessions = [] }: { activities: Activi
             )}
           </span>
           <div>
-            <h3>{a.title}</h3>
+            <h3>{onOpenTask && a.kind === "task" && a.id.startsWith("task-") ? <a href={`/tasks/${encodeURIComponent(a.id.slice(5))}`} onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault(); onOpenTask(a.id.slice(5));
+            }}>{a.title}</a> : a.title}</h3>
             <p className="activity-meta">
               <span>{a.category}
               {a.distanceKm !== undefined ? ` · ${a.distanceKm} km` : ""}
@@ -268,7 +271,6 @@ export function ProjectsView({
   selected,
   onSelect,
   onNew,
-  onMilestone,
   onToggleTask,
   onFocus,
   onNewTask,
@@ -278,21 +280,20 @@ export function ProjectsView({
   selected: string | null;
   onSelect: (id: string | null) => void;
   onNew: () => void;
-  onMilestone: (projectId: string, id?: string, title?: string) => void;
   onToggleTask: (id: string) => void;
   onFocus: (id: string) => void;
   onNewTask: () => void;
   onOpenTask: (id: string) => void;
 }) {
   const project = state.projects.find((p) => p.id === selected);
-  const [milestone, setMilestone] = useState("");
+  const [taskFilter, setTaskFilter] = useState("open");
   const evidence = (p: Project) => {
     const acts = state.activities.filter((a) => a.projectId === p.id);
     return {
       minutes: acts.reduce((sum, a) => sum + a.minutes, 0),
       sessions: acts.filter((a) => a.kind === "session").length,
       days: new Set(
-        acts.filter((a) => a.date >= relativeDay(-6)).map((a) => a.date),
+        acts.filter((a) => a.date >= relativeDay(-6) && a.date <= relativeDay(0)).map((a) => a.date),
       ).size,
       tasks: state.tasks.filter((t) => t.projectId === p.id && t.completed)
         .length,
@@ -301,6 +302,7 @@ export function ProjectsView({
   };
   if (project) {
     const stats = evidence(project);
+    const completedToday = projectCompletions(state, project.id, relativeDay(0));
     return (
       <>
         <button
@@ -331,78 +333,22 @@ export function ProjectsView({
             </div>
           ))}
         </div>
-        <div className="detail-grid">
-          <section className="card">
-            <SectionHeading
-              eyebrow="A PATH YOU DEFINE"
-              title="One milestone at a time."
-            />
-            <p className="muted">
-              {project.milestones.filter((m) => m.completed).length} of{" "}
-              {project.milestones.length} milestones complete. No invented
-              finish line.
-            </p>
-            <div className="milestone-list">
-              {project.milestones.map((m) => (
-                <button
-                  className={m.completed ? "milestone-done" : ""}
-                  onClick={() => onMilestone(project.id, m.id)}
-                  key={m.id}
-                >
-                  {m.completed ? <Check size={17} /> : <Circle size={17} />}
-                  <span>{m.title}</span>
-                </button>
-              ))}
+        <div className="detail-grid project-workspace">
+          <section className="card project-tasks">
+            <div className="project-tasks-heading"><SectionHeading title="Tasks." />
+              <button className="primary-button" onClick={onNewTask}><Plus size={16} />Add a Task</button>
             </div>
-            <form
-              className="inline-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (milestone.trim()) {
-                  onMilestone(project.id, undefined, milestone.trim());
-                  setMilestone("");
-                }
-              }}
-            >
-              <input
-                aria-label="New milestone"
-                value={milestone}
-                onChange={(e) => setMilestone(e.target.value)}
-                maxLength={100}
-                placeholder="Add your own milestone"
-                required
-              />
-              <button className="icon-button" aria-label="Add milestone">
-                <Plus size={18} />
-              </button>
-            </form>
-          </section>
-          <section className="card">
-            <SectionHeading
-              title="The next small steps."
-              action="Add task"
-              onAction={onNewTask}
-            />
+            <div className="filter-tabs project-task-filters" role="group" aria-label="Filter project tasks">{[["open", "Open"], ["done", "Done"], ["archived", "Archived"]].map(([value, label]) => <button key={value} className={taskFilter === value ? "active" : ""} aria-pressed={taskFilter === value} onClick={() => setTaskFilter(value)}>{label}</button>)}</div>
             <TaskList
-              tasks={state.tasks.filter((t) => t.projectId === project.id && !t.archivedAt)}
-              onToggle={onToggleTask}
-              onFocus={onFocus}
-              onOpen={onOpenTask}
+              tasks={state.tasks.filter((task) => task.projectId === project.id && (taskFilter === "archived" ? !!task.archivedAt : !task.archivedAt && (taskFilter === "done" ? task.completed : !task.completed)))}
+              onToggle={onToggleTask} onFocus={onFocus} onOpen={onOpenTask}
             />
+          </section>
+          <section className="card project-journal">
+            <SectionHeading eyebrow="PROOF OF PROGRESS" title="Completed today." />
+            {completedToday.length ? <ActivityRows activities={completedToday} onOpenTask={onOpenTask} /> : <Empty>No tasks completed today yet. Completed tasks will appear here as you go.</Empty>}
           </section>
         </div>
-        <section className="card project-journal">
-          <SectionHeading
-            eyebrow="PROOF OF PROGRESS"
-            title="The work, as it happened."
-          />
-          <ActivityRows
-            activities={state.activities
-              .filter((a) => a.projectId === project.id)
-              .slice(-8)
-              .reverse()}
-          />
-        </section>
       </>
     );
   }

@@ -86,7 +86,6 @@ type Dialog = {
 };
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
-  { view: "tasks", label: "Tasks", icon: BriefcaseBusiness },
   { view: "projects", label: "Projects", icon: Feather },
   { view: "reflect", label: "Reflect", icon: Leaf },
   { view: "insights", label: "Weekly notes", icon: BookOpen },
@@ -154,7 +153,7 @@ function Workspace({
       const taskPath = window.location.pathname.match(/^\/tasks\/([^/]+)\/?$/);
       setSelectedTask(taskPath ? decodeURIComponent(taskPath[1]) : null);
       setView(
-        taskPath || window.location.pathname === "/tasks" ? "tasks" : navigation.some((n) => n.view === requested)
+        taskPath ? "tasks" : window.location.pathname === "/tasks" || requested === "tasks" ? "projects" : navigation.some((n) => n.view === requested)
           ? (requested as View)
           : window.location.pathname === "/" ? "today" : initialView,
       );
@@ -261,7 +260,6 @@ function Workspace({
 
     if (timer && id && timer.taskId !== id) {
       setToast("Finish your current session first. One thing at a time.");
-      navigate("today");
       return;
     }
     const time = Date.now();
@@ -341,61 +339,6 @@ function Workspace({
     if (archived && timer?.taskId === id) { setToast("Finish your focus session before archiving this task."); return; }
     setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id ? { ...task, archivedAt: archived ? new Date().toISOString() : undefined } : task) }));
   }
-  function updateMilestone(projectId: string, id?: string, title?: string) {
-    const project = state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    const milestone = project.milestones.find((m) => m.id === id);
-    if (id && !milestone) return;
-    if (!id && !title?.trim()) return;
-    setState((s) => {
-      const project = s.projects.find((p) => p.id === projectId);
-      if (!project) return s;
-      const milestone = project.milestones.find((m) => m.id === id);
-      const activities = !milestone
-        ? s.activities
-        : milestone.completed
-          ? s.activities.filter((a) => a.id !== `milestone-${id}`)
-          : [
-              ...s.activities,
-              {
-                id: `milestone-${id}`,
-                title: `${project.name}: ${milestone.title}`,
-                date: today,
-                area: "do" as const,
-                category: project.name,
-                kind: "task" as const,
-                minutes: 0,
-                projectId,
-                source: "manual" as const,
-              },
-            ];
-      return {
-        ...s,
-        activities,
-        projects: s.projects.map((p) =>
-          p.id !== projectId
-            ? p
-            : {
-                ...p,
-                milestones: id
-                  ? p.milestones.map((m) =>
-                      m.id === id ? { ...m, completed: !m.completed } : m,
-                    )
-                  : [
-                      ...p.milestones,
-                      { id: uid(), title: title!, completed: false },
-                    ],
-              },
-        ),
-      };
-    });
-    if (!id) celebrate("task", `Milestone added to ${project.name}. A next step to aim for.`);
-    else if (milestone && !milestone.completed) celebrate("task", `Milestone complete: ${milestone.title}.`);
-    else {
-      setCelebration(null);
-      setToast("Milestone reopened. Take it at your pace.");
-    }
-  }
   function addActivity(activity: Activity) {
     setState((s) => ({ ...s, activities: [...s.activities, { ...activity, recordedAt: new Date().toISOString() }] }));
     announce(`Logged “${activity.title}”. A little piece of your day, kept.`);
@@ -455,8 +398,8 @@ function Workspace({
           {navigation.map(({ view: next, label, icon: Icon }) => (
             <button
               key={next}
-              className={`nav-item ${view === next ? "active" : ""}`}
-              aria-current={view === next ? "page" : undefined}
+              className={`nav-item ${view === next || (view === "tasks" && next === "projects") ? "active" : ""}`}
+              aria-current={view === next || (view === "tasks" && next === "projects") ? "page" : undefined}
               onClick={() => navigate(next)}
             >
               <Icon size={18} strokeWidth={1.6} />
@@ -481,7 +424,7 @@ function Workspace({
               key={p.id}
               onClick={() => navigate("projects", p.id)}
               className={
-                selectedProject === p.id && view === "projects"
+                (selectedProject === p.id && view === "projects") || (view === "tasks" && state.tasks.find((task) => task.id === selectedTask)?.projectId === p.id)
                   ? "selected"
                   : ""
               }
@@ -542,7 +485,7 @@ function Workspace({
             </button>
             <span className="breadcrumb">
               Your space<span>/</span>
-              {navigation.find((n) => n.view === view)?.label}
+              {view === "tasks" ? "Projects" : navigation.find((n) => n.view === view)?.label}
             </span>
             <span className="mobile-brand">do.daily</span>
           </div>
@@ -697,19 +640,19 @@ function Workspace({
             </>
           )}
           {view === "tasks" && <TasksView state={state} selected={selectedTask} timer={timer} seconds={seconds}
-            onOpen={openTask} onBack={() => navigate("tasks")} onNew={() => setDialog({ type: "task" })}
+            onBack={() => navigate("projects", state.tasks.find((task) => task.id === selectedTask)?.projectId || null)}
             onToggle={toggleTask} onStatus={setTaskStatus} onFocus={(id) => startTimer(id)} onEdit={editTask} onArchive={archiveTask}
             onSession={(id, taskId, note) => setState((current) => editTaskSession(current, id, taskId, note))} />}
           {view === "projects" && (
             <ProjectsView
+              key={selectedProject || "all"}
               state={state}
               selected={selectedProject}
               onSelect={(id) => navigate("projects", id)}
               onNew={() => setDialog({ type: "project" })}
-              onMilestone={updateMilestone}
               onToggleTask={toggleTask}
               onOpenTask={openTask}
-              onFocus={focusTask}
+              onFocus={(id) => startTimer(id)}
               onNewTask={() => setDialog({ type: "task" })}
             />
           )}
@@ -745,8 +688,8 @@ function Workspace({
         {navigation.map(({ view: next, label, icon: Icon }) => (
           <button
             key={next}
-            className={view === next ? "active" : ""}
-            aria-current={view === next ? "page" : undefined}
+            className={view === next || (view === "tasks" && next === "projects") ? "active" : ""}
+            aria-current={view === next || (view === "tasks" && next === "projects") ? "page" : undefined}
             onClick={() => navigate(next)}
           >
             <Icon size={19} strokeWidth={1.5} />

@@ -1,7 +1,7 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
 import { emptyAccount } from "../src/lib/account/repository";
-import { changeTaskStatus, editTaskSession, taskHistory, taskStatus } from "../src/lib/prototype/tasks";
+import { changeTaskStatus, editTaskSession, projectCompletions, taskHistory, taskStatus } from "../src/lib/prototype/tasks";
 import { ActiveTimer, Task } from "../src/lib/prototype/types";
 const task: Task = {id:"stripe",title:"Integrate Stripe",area:"do",category:"Work",completed:false,description:"Checkout and receipts",notes:[{id:"n",text:"Initial research",createdAt:"2026-10-28T10:00:00Z"}]};
 const fresh=()=>({...emptyAccount({id:"owner",user_metadata:{}}),tasks:[{...task}, {...task,id:"other",title:"Another task",notes:[]}]});
@@ -27,3 +27,13 @@ it("corrects session attribution and its activity mirror without changing elapse
  const state=changeTaskStatus(fresh(),"stripe","done",timer,now,()=>"a");const edited=editTaskSession(state,"a","other","Updated session note");assert.equal(taskHistory(edited,"stripe").seconds,0);assert.equal(taskHistory(edited,"other").seconds,180);assert.equal(edited.activities.find(a=>a.id==="session-a")?.note,"Updated session note");assert.equal(edited.sessions[0].endedAt,state.sessions[0].endedAt);assert.equal(state.sessions[0].taskId,"stripe");assert.equal(editTaskSession(state,"a","missing","note"),state);
 });
 it("understands legacy tasks and does not infer completion from missing optional fields",()=>{assert.equal(taskStatus(task),"todo");assert.equal(taskStatus({...task,status:"in_progress"}),"in_progress");assert.equal(taskStatus({...task,completed:true}),"done");});
+
+it("project proof includes only this project’s tasks completed on the requested day",()=>{
+  const state=fresh();state.tasks[0]={...state.tasks[0],projectId:"p",completed:true};state.tasks[1]={...state.tasks[1],projectId:"q",completed:true};
+  state.activities=[{id:"task-stripe",title:"Stripe",date:"2026-10-30",area:"do",category:"Work",kind:"task",minutes:0,source:"manual",projectId:"p"},
+    {id:"task-other",title:"Other",date:"2026-10-30",area:"do",category:"Work",kind:"task",minutes:0,source:"manual",projectId:"q"},
+    {id:"milestone-old",title:"Legacy milestone",date:"2026-10-30",area:"do",category:"Work",kind:"task",minutes:0,source:"manual",projectId:"p"}];
+  assert.deepEqual(projectCompletions(state,"p","2026-10-30").map(a=>a.id),["task-stripe"]);
+  assert.equal(projectCompletions(state,"p","2026-10-29").length,0);
+  state.tasks[0].completed=false;assert.equal(projectCompletions(state,"p","2026-10-30").length,0);
+});

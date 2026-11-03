@@ -1,2 +1,2 @@
-import PrototypeApp from "@/components/prototype/PrototypeApp";
-export default function Tasks() { return <PrototypeApp initialView="tasks" />; }
+import { redirect } from "next/navigation";
+export default function Tasks() { redirect("/projects"); }
