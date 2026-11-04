@@ -19,6 +19,7 @@ export function clock(seconds: number) {
 }
 export default function TimerCard({
   tasks,
+  projectName,
   area,
   timer,
   seconds,
@@ -28,6 +29,7 @@ export default function TimerCard({
   clockRef,
 }: {
   tasks: Task[];
+  projectName?: string;
   area: Area;
   timer: ActiveTimer | null;
   seconds: number;
@@ -49,7 +51,7 @@ export default function TimerCard({
       </div>
       <h2>
         {timer
-          ? active?.title || "Focus in progress."
+          ? active?.title || projectName || "Focus in progress."
           : area === "do"
             ? "One thing at a time."
             : "Be here for a while."}
@@ -99,7 +101,7 @@ export default function TimerCard({
         </button>
       )}
       <div className="focus-bottom">
-        <ArrowDown size={12} /> No target. Just intentional time.
+        <ArrowDown size={12} /> {active ? "Focus linked to this task." : projectName ? "Focus linked to this project." : "No target. Just intentional time."}
       </div>
     </section>
   );

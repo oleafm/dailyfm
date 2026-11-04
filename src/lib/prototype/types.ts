@@ -119,6 +119,7 @@ export interface PrototypeState {
   completions: ChallengeCompletion[];
 }
 export interface ActiveTimer {
+  projectId?: string;
   taskId?: string;
   area?: Area;
   endedAt?: string;

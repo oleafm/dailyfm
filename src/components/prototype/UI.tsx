@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, useId, ReactNode } from "react";
 import { ArrowUpRight, X } from "lucide-react";
 
 export function Modal({
@@ -8,13 +8,16 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  presentation = "modal",
 }: {
   title: string;
   eyebrow?: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  presentation?: "modal" | "drawer";
 }) {
+  const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
@@ -55,22 +58,22 @@ export function Modal({
   }, []);
   return (
     <div
-      className="modal-backdrop"
+      className={presentation === "drawer" ? "drawer-backdrop" : "modal-backdrop"}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className={`modal ${wide ? "modal-wide" : ""}`}
+        className={presentation === "drawer" ? "task-drawer" : `modal ${wide ? "modal-wide" : ""}`}
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="dialog-title"
+        aria-labelledby={titleId}
       >
-        <header className="modal-header">
+        <header className={presentation === "drawer" ? "drawer-header" : "modal-header"}>
           <div>
             {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-            <h2 id="dialog-title">{title}</h2>
+            <h2 id={titleId}>{title}</h2>
           </div>
           <button
             className="icon-button"
@@ -80,7 +83,7 @@ export function Modal({
             <X size={20} />
           </button>
         </header>
-        {children}
+        {presentation === "drawer" ? <div className="drawer-content">{children}</div> : children}
       </div>
     </div>
   );

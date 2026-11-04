@@ -3675,7 +3675,39 @@ h1 em {
 .project-tasks-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
 .project-tasks-heading .section-heading { margin: 0; }
 .project-tasks-heading .primary-button { flex-shrink: 0; }
-.project-task-filters { margin-bottom: 16px; }
+.project-task-filters { width: fit-content; max-width: 100%; margin-bottom: 16px; }
 .project-workspace .project-journal { margin-top: 0; }
 .project-journal .activity-row h3 a { color: inherit; text-decoration: none; }
 .project-journal .activity-row h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Floating task panels. */
+.drawer-backdrop { position: fixed; inset: 0; z-index: 950; background: #00000025; display: flex; justify-content: flex-end; padding: 16px; }
+.task-drawer { width: min(620px, 100%); height: 100%; background: #fff; border: 1px solid #e5e5e5; border-radius: 22px; box-shadow: 0 12px 60px #00000020; overflow: auto; overscroll-behavior: contain; animation: drawer-enter .2s ease-out; }
+.drawer-header { position: sticky; top: 0; z-index: 2; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; border-bottom: 1px solid #eee; }
+.drawer-header h2 { font-size: 22px; letter-spacing: -.6px; }
+.drawer-header .eyebrow { margin-bottom: 6px; }
+.drawer-content { padding: 20px 24px 28px; }
+.task-panel-actions { display: flex; align-items: end; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.task-panel-actions button { min-height: 36px; padding: 8px 12px; font-size: 11px; }
+.task-panel-actions button:disabled { opacity: .5; cursor: default; }
+.task-panel-status { display: grid; gap: 5px; font-size: 10px; color: #777; margin-left: auto; }
+.task-panel-status select { font: inherit; color: #222; border: 1px solid #ddd; border-radius: 10px; padding: 8px; height: 36px; background: #fff; }
+.task-panel-focus { display: flex; gap: 10px; margin-bottom: 16px; }
+.task-panel-focus button { font-size: 11px; padding: 10px 16px; min-height: 38px; }
+.task-drawer .task-stat-grid { gap: 8px; margin: 18px 0; }
+.task-drawer .task-stat-grid > div { padding: 14px 10px; border: 1px solid #eee; border-radius: 12px; }
+.task-drawer .task-stat-grid strong { font-size: 20px; }
+.task-drawer .task-stat-grid span { font-size: 10px; }
+.task-drawer .task-workspace-grid { grid-template-columns: 1fr; gap: 22px; }
+.task-drawer .task-workspace-grid > section, .task-drawer .task-session-history { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.task-drawer .task-workspace-grid .section-heading h2, .task-drawer .task-session-history h2 { font-size: 18px; }
+.task-drawer .task-workspace-grid .section-heading { margin-bottom: 18px; }
+.task-drawer .task-session-history { border-top: 1px solid #eee; padding-top: 22px; }
+.task-drawer .task-notes { border-top: 1px solid #eee; padding-top: 22px !important; }
+.task-tracked-total { display: grid; gap: 3px; text-align: right; flex-shrink: 0; }
+.task-tracked-total strong { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.task-tracked-total small { font-size: 9px; color: #888; }
+.task-view-more { margin-top: 14px; font-size: 11px; }
+@keyframes drawer-enter { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@media (max-width: 760px) { .drawer-backdrop { padding: 8px; } .task-drawer { border-radius: 18px; } .drawer-header { padding: 18px; } .drawer-content { padding: 16px 18px 24px; } .task-drawer .task-stat-grid strong { font-size: 17px; } .task-drawer .task-stat-grid span { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .task-drawer { animation: none; } }

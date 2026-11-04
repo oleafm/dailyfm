@@ -1,7 +1,7 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
 import { emptyAccount } from "../src/lib/account/repository";
-import { changeTaskStatus, editTaskSession, projectCompletions, taskHistory, taskStatus } from "../src/lib/prototype/tasks";
+import { changeTaskStatus, editTaskSession, finishAssignedTimer, projectCompletions, taskHistory, taskStatus } from "../src/lib/prototype/tasks";
 import { ActiveTimer, Task } from "../src/lib/prototype/types";
 const task: Task = {id:"stripe",title:"Integrate Stripe",area:"do",category:"Work",completed:false,description:"Checkout and receipts",notes:[{id:"n",text:"Initial research",createdAt:"2026-10-28T10:00:00Z"}]};
 const fresh=()=>({...emptyAccount({id:"owner",user_metadata:{}}),tasks:[{...task}, {...task,id:"other",title:"Another task",notes:[]}]});
@@ -37,3 +37,7 @@ it("project proof includes only this project’s tasks completed on the requeste
   assert.equal(projectCompletions(state,"p","2026-10-29").length,0);
   state.tasks[0].completed=false;assert.equal(projectCompletions(state,"p","2026-10-30").length,0);
 });
+
+it("Finish completes a selected task and saves its time without requesting details",()=>{const result=finishAssignedTimer(fresh(),timer,now,()=>"direct")!;assert.equal(result.tasks[0].completed,true);assert.equal(result.sessions.length,1);assert.equal(result.sessions[0].durationSeconds,180);assert.equal(finishAssignedTimer(result,timer,now,()=>"duplicate"),result);});
+it("Finish logs a selected project without completing unrelated tasks, and is retry-safe",()=>{const state=fresh();state.projects=[{id:"p",name:"Portfolio",description:"",color:"sage",milestones:[]}];const projectTimer={...timer,taskId:undefined,projectId:"p"};const result=finishAssignedTimer(state,projectTimer,now,()=>"project")!;assert.equal(result.sessions[0].projectId,"p");assert.equal(result.sessions[0].taskId,undefined);assert.equal(result.tasks[0].completed,false);assert.equal(finishAssignedTimer(result,projectTimer,now,()=>"duplicate"),result);});
+it("unassigned or unavailable destinations still require the finish form",()=>{assert.equal(finishAssignedTimer(fresh(),{...timer,taskId:undefined},now,()=>"unused"),null);assert.equal(finishAssignedTimer(fresh(),{...timer,taskId:"missing"},now,()=>"unused"),null);});

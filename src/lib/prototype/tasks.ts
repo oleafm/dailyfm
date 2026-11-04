@@ -43,3 +43,15 @@ export function projectCompletions(state: PrototypeState, projectId: string, dat
   const completed = new Set(state.tasks.filter((task) => task.projectId === projectId && task.completed).map((task) => `task-${task.id}`));
   return state.activities.filter((activity) => activity.projectId === projectId && activity.date === date && activity.kind === "task" && completed.has(activity.id));
 }
+
+/** Finish knows the destination: save directly, completing the selected task. */
+export function finishAssignedTimer(state: PrototypeState, timer: ActiveTimer, now: number, makeId: () => string): PrototypeState | null {
+  const task = state.tasks.find((task) => task.id === timer.taskId);
+  const project = state.projects.find((project) => project.id === timer.projectId);
+  if (!task && !project) return null;
+  if (state.sessions.some((session) => session.startedAt === timer.startedAt && (task ? session.taskId === task.id : !session.taskId && session.projectId === project!.id))) return state;
+  if (task && !task.completed) return changeTaskStatus(state, task.id, "done", timer, now, makeId);
+  const seconds = timer.elapsed + (timer.runningSince !== null ? Math.max(0, Math.floor((now - timer.runningSince) / 1000)) : 0);
+  return finishSession(state, { ...timer, endedAt: timer.endedAt || new Date(now).toISOString(), runningSince: null }, seconds,
+    { taskId: task?.id, projectId: task?.projectId || project?.id, title: task?.title || project!.name, area: task?.area || timer.area || "do", category: task?.category || "Work", note: "" }, makeId);
+}

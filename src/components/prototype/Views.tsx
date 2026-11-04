@@ -37,8 +37,9 @@ import { chronologicalActivities, displayTime } from "@/lib/prototype/sessions";
 import { Empty, SectionHeading } from "./UI";
 import Illustration from "./Illustration";
 import QuoteCard from "./QuoteCard";
+import { clock } from "./TimerCard";
 import { weeklySummary } from "@/lib/prototype/weekly";
-import { projectCompletions } from "@/lib/prototype/tasks";
+import { projectCompletions, taskHistory } from "@/lib/prototype/tasks";
 
 function ActivityTime({ activity }: { activity: Activity }) {
   const { startedAt, endedAt, recordedAt } = activity;
@@ -94,15 +95,18 @@ export function TaskList({
   onToggle,
   onFocus,
   onOpen,
+  initialLimit = 10,
 }: {
   tasks: Task[];
+  initialLimit?: number;
   onToggle: (id: string) => void;
   onFocus: (id: string) => void;
   onOpen: (id: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   return (
     <div className="task-list">
-      {tasks.map((t) => (
+      {(expanded ? tasks : tasks.slice(0, initialLimit)).map((t) => (
         <div
           className={`task-row ${t.completed ? "completed" : ""}`}
           key={t.id}
@@ -134,6 +138,7 @@ export function TaskList({
           )}
         </div>
       ))}
+      {!expanded && tasks.length > initialLimit && <button className="text-button task-view-more" onClick={() => setExpanded(true)}>View more ({tasks.length - initialLimit}) <ArrowRight size={14} /></button>}
       {!tasks.length && (
         <Empty>A fresh page. Add something you want to make time for.</Empty>
       )}
@@ -186,7 +191,9 @@ export function PlanCard({
         </div>
       )}
       <TaskList
-        tasks={tasks.filter((t) => t.area === area && !t.archivedAt)}
+        key={area}
+        initialLimit={5}
+        tasks={tasks.filter((t) => t.area === area && !t.archivedAt && !t.completed)}
         onToggle={onToggle}
         onFocus={onFocus}
         onOpen={onOpen}
@@ -275,6 +282,7 @@ export function ProjectsView({
   onFocus,
   onNewTask,
   onOpenTask,
+  onProjectFocus,
 }: {
   state: PrototypeState;
   selected: string | null;
@@ -284,9 +292,11 @@ export function ProjectsView({
   onFocus: (id: string) => void;
   onNewTask: () => void;
   onOpenTask: (id: string) => void;
+  onProjectFocus: (id: string) => void;
 }) {
   const project = state.projects.find((p) => p.id === selected);
   const [taskFilter, setTaskFilter] = useState("open");
+  const [allCompleted, setAllCompleted] = useState(false);
   const evidence = (p: Project) => {
     const acts = state.activities.filter((a) => a.projectId === p.id);
     return {
@@ -312,13 +322,14 @@ export function ProjectsView({
           <ArrowLeft size={15} />
           All projects
         </button>
-        <div className="page-intro">
-          <p className="eyebrow">SOMETHING YOU’RE BUILDING</p>
+        <div className="page-intro intro-with-action">
+          <div><p className="eyebrow">SOMETHING YOU’RE BUILDING</p>
           <h1>
             {project.name}
             <span className={`project-dot ${project.color}`} />
           </h1>
-          <p>{project.description}</p>
+          <p>{project.description}</p></div>
+          <button className="secondary-button" onClick={() => onProjectFocus(project.id)}><Play size={15} />Start project focus</button>
         </div>
         <div className="project-stat-grid">
           {[
@@ -340,13 +351,22 @@ export function ProjectsView({
             </div>
             <div className="filter-tabs project-task-filters" role="group" aria-label="Filter project tasks">{[["open", "Open"], ["done", "Done"], ["archived", "Archived"]].map(([value, label]) => <button key={value} className={taskFilter === value ? "active" : ""} aria-pressed={taskFilter === value} onClick={() => setTaskFilter(value)}>{label}</button>)}</div>
             <TaskList
+              key={taskFilter}
               tasks={state.tasks.filter((task) => task.projectId === project.id && (taskFilter === "archived" ? !!task.archivedAt : !task.archivedAt && (taskFilter === "done" ? task.completed : !task.completed)))}
               onToggle={onToggleTask} onFocus={onFocus} onOpen={onOpenTask}
             />
           </section>
           <section className="card project-journal">
             <SectionHeading eyebrow="PROOF OF PROGRESS" title="Completed today." />
-            {completedToday.length ? <ActivityRows activities={completedToday} onOpenTask={onOpenTask} /> : <Empty>No tasks completed today yet. Completed tasks will appear here as you go.</Empty>}
+            {completedToday.length ? <div className="activity-list">{(allCompleted ? chronologicalActivities(completedToday) : chronologicalActivities(completedToday).slice(0,10)).map((activity) => {
+              const id = activity.id.slice(5);
+              return <article className="activity-row completed-task-row" key={activity.id}>
+                <span className="activity-symbol"><Check size={15} /></span>
+                <div><h3><a href={`/tasks/${encodeURIComponent(id)}`} onClick={(event) => { if(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)return; event.preventDefault();onOpenTask(id); }}>{state.tasks.find((task) => task.id === id)?.title || activity.title}</a></h3>
+                <p className="activity-meta">{activity.recordedAt ? <>Completed at <time dateTime={activity.recordedAt}>{displayTime(activity.recordedAt)}</time></> : "Completion time not recorded"}</p></div>
+                <span className="task-tracked-total"><strong>{clock(taskHistory(state, id).seconds)}</strong><small>tracked</small></span>
+              </article>;
+            })}{!allCompleted && completedToday.length > 10 && <button className="text-button task-view-more" onClick={() => setAllCompleted(true)}>View more ({completedToday.length - 10}) <ArrowRight size={14} /></button>}</div> : <Empty>No tasks completed today yet. Completed tasks will appear here as you go.</Empty>}
           </section>
         </div>
       </>
