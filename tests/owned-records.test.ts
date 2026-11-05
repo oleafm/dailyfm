@@ -54,16 +54,17 @@ it("aborts an invalid legacy migration without losing the old data",async()=>{
 });
 it("keeps every populated personal-data collection private across accounts",async()=>{
  const record=await load(alice);const data=record.data;
- data.projects=[{id:"z",name:"Private project",description:"Personal",color:"sage",milestones:[]}];
- data.tasks=[{id:"t",title:"Private task",area:"do",category:"Work",projectId:"z",completed:false,status:"in_progress",description:"Private task description",notes:[{id:"note",text:"Private progress",createdAt:"2026-10-29T09:00:00Z"}],archivedAt:"2026-10-29T10:00:00Z"}];
+ data.projects=[{id:"z",name:"Private project",description:"Personal",color:"sage",area:"be",milestones:[]}];
+ data.tasks=[{id:"t",title:"Private task",area:"be",category:"Work",projectId:"z",completed:false,status:"in_progress",description:"Private task description",notes:[{id:"note",text:"Private progress",createdAt:"2026-10-29T09:00:00Z"}],archivedAt:"2026-10-29T10:00:00Z"}];
  data.sessions=[{id:"s",taskId:"t",projectId:"z",startedAt:"2026-10-26T09:00:00Z",durationSeconds:60,durationAdjusted:true,originalDurationSeconds:120,date:"2026-10-26",note:"Private session"}];
- data.activities=[{id:"a",title:"Private activity",date:"2026-10-26",area:"do",category:"Work",kind:"session",minutes:1,source:"timer",projectId:"z"}];
+ data.activities=[{id:"a",title:"Private activity",date:"2026-10-26",area:"be",category:"Work",kind:"session",minutes:1,source:"timer",projectId:"z"}];
  data.checkIns=[{id:"c",date:"2026-10-26",mood:5,energy:3,gratitude:"Private gratitude",tomorrow:"Rest",dailyPrompt:"What helped?",dailyAnswer:"Private answer",movedForward:"Private thoughts",reflection:{id:"r",date:"2026-10-26",text:"Private reflection"}}];
  data.challenges=[{id:"h",title:"Private invitation",description:"Personal",category:"Explore",target:1,month:"2026-10"}];
  data.completions=[{id:"m",challengeId:"h",title:"Private memory",photo:"data:image/png;base64,PRIVATE_FIXTURE",photoIsSample:false,note:"Private note",date:"2026-10-26",location:"Private location",again:"Yes"}];
  await save(data,record.revision);
  assert.deepEqual((await load(alice)).data.checkIns,data.checkIns);
  assert.deepEqual((await load(alice)).data.tasks,data.tasks);
+ assert.deepEqual((await load(alice)).data.projects,data.projects);
  assert.deepEqual((await load(alice)).data.sessions,data.sessions);
  for(const table of tables)assert.equal((await db.query(`select * from public.daily_${table} where user_id=$1`,[alice])).rows.length,1);
  await owner(bob);

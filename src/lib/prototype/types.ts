@@ -10,6 +10,7 @@ export interface Milestone {
   completed: boolean;
 }
 export interface Project {
+  area?: Area;
   id: string;
   name: string;
   description: string;

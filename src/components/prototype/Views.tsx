@@ -39,6 +39,7 @@ import Illustration from "./Illustration";
 import QuoteCard from "./QuoteCard";
 import { clock } from "./TimerCard";
 import { weeklySummary } from "@/lib/prototype/weekly";
+import { projectsInArea } from "@/lib/prototype/projects";
 import { projectCompletions, taskHistory } from "@/lib/prototype/tasks";
 
 function ActivityTime({ activity }: { activity: Activity }) {
@@ -275,6 +276,7 @@ export function ChallengeTeaser({
 }
 export function ProjectsView({
   state,
+  area,
   selected,
   onSelect,
   onNew,
@@ -285,6 +287,7 @@ export function ProjectsView({
   onProjectFocus,
 }: {
   state: PrototypeState;
+  area: Area;
   selected: string | null;
   onSelect: (id: string | null) => void;
   onNew: () => void;
@@ -386,7 +389,7 @@ export function ProjectsView({
         </button>
       </div>
       <div className="projects-grid">
-        {state.projects.map((p, index) => {
+        {projectsInArea(state.projects, area).map((p, index) => {
           const stats = evidence(p);
           return (
             <button

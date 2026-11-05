@@ -12,7 +12,9 @@
     "test:security": "node --import tsx tests/owned-records.test.ts",
     "test:journal": "node --import tsx tests/journal.test.ts",
     "test:weekly": "node --import tsx tests/weekly.test.ts",
-    "test:tasks": "node --import tsx tests/tasks.test.ts"
+    "test:tasks": "node --import tsx tests/tasks.test.ts",
+    "test:activity": "node --import tsx tests/activity-history.test.ts",
+    "test:projects": "node --import tsx tests/projects.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

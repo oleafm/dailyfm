@@ -39,6 +39,7 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
+import { projectArea, projectsInArea } from "@/lib/prototype/projects";
 import TasksView from "./TasksView";
 import { changeTaskStatus, editTaskSession, taskStatus } from "@/lib/prototype/tasks";
 import QuoteCard from "./QuoteCard";
@@ -158,10 +159,10 @@ function Workspace({
           ? (requested as View)
           : window.location.pathname === "/" ? "today" : initialView,
       );
-      setSelectedProject(
-        params.get("project") || (taskPath ? state.tasks.find((task) => task.id === taskId)?.projectId || null : requested ? null : initialProject),
-      );
-      setArea(params.get("area") === "be" ? "be" : "do");
+      const projectId = params.get("project") || (taskPath ? state.tasks.find((task) => task.id === taskId)?.projectId || null : requested ? null : initialProject);
+      setSelectedProject(projectId);
+      const project = state.projects.find((project) => project.id === projectId);
+      setArea(taskPath ? state.tasks.find((task) => task.id === taskId)?.area || (project ? projectArea(project) : "do") : project ? projectArea(project) : params.get("area") === "be" ? "be" : "do");
     };
     restoreLocation();
     window.addEventListener("popstate", restoreLocation);
@@ -239,12 +240,14 @@ function Workspace({
     project: string | null = null,
     nextArea: Area = area,
   ) {
+    const targetProject = next === "projects" ? state.projects.find((item) => item.id === project) : undefined;
+    const targetArea = targetProject ? projectArea(targetProject) : nextArea;
     setView(next);
     setSelectedTask(null);
-    setArea(nextArea);
+    setArea(targetArea);
     setSelectedProject(project);
     setMobileMenu(false);
-    const params = new URLSearchParams({ view: next, area: nextArea });
+    const params = new URLSearchParams({ view: next, area: targetArea });
     if (project) params.set("project", project);
     window.history.pushState(null, "", `/?${params}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -272,6 +275,7 @@ function Workspace({
       return;
     }
     const contextProjectId = selected ? selected.projectId : projectId || (view === "projects" ? selectedProject || undefined : undefined);
+    const contextProject = state.projects.find((project) => project.id === contextProjectId);
     const time = Date.now();
     setNow(time);
     if (id) setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id && !task.completed ? { ...task, status: "in_progress" } : task) }));
@@ -281,7 +285,7 @@ function Workspace({
         : {
             taskId: id,
             projectId: contextProjectId,
-            area: selected?.area || (contextProjectId ? "do" : area),
+            area: selected?.area || (contextProject ? projectArea(contextProject) : area),
             startedAt: new Date(time).toISOString(),
             elapsed: 0,
             runningSince: time,
@@ -433,7 +437,7 @@ function Workspace({
               <Plus size={14} />
             </button>
           </div>
-          {state.projects.slice(0, 4).map((p) => (
+          {projectsInArea(state.projects, area).slice(0, 4).map((p) => (
             <button
               key={p.id}
               onClick={() => navigate("projects", p.id)}
@@ -597,6 +601,7 @@ function Workspace({
               <div className="dashboard-grid">
                 <ActivityGrid
                   activities={state.activities}
+                  registeredAt={account?.created_at}
                   onDay={(date) => setDialog({ type: "day", id: date })}
                   onMomentum={() => setDialog({ type: "momentum" })}
                 />
@@ -657,8 +662,9 @@ function Workspace({
           )}
           {view === "projects" && (
             <ProjectsView
-              key={selectedProject || "all"}
+              key={`${area}-${selectedProject || "all"}`}
               state={state}
+              area={area}
               selected={selectedProject}
               onSelect={(id) => navigate("projects", id)}
               onNew={() => setDialog({ type: "project" })}
@@ -793,7 +799,7 @@ function Workspace({
             onSave={(task) => {
               setState((s) => ({ ...s, tasks: [...s.tasks, task] }));
               setArea(task.area);
-              if (task.area === "do") openTask(task.id, task.area);
+              openTask(task.id, task.area);
               announce(`Added “${task.title}”. A small intention, ready when you are.`);
             }}
           />
@@ -837,9 +843,10 @@ function Workspace({
           onClose={close}
         >
           <ProjectForm
+            initialArea={area}
             onSave={(project) => {
               setState((s) => ({ ...s, projects: [...s.projects, project] }));
-              navigate("projects", project.id);
+              navigate("projects", project.id, projectArea(project));
               announce(`Created ${project.name}. A new space for something meaningful.`);
             }}
           />

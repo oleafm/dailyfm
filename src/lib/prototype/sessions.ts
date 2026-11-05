@@ -1,5 +1,6 @@
 import { ActiveTimer, Activity, Area, PrototypeState, TimerSession } from "./types";
 import { dateKey } from "./seed";
+import { projectArea } from "./projects";
 
 export interface SessionDetails {
   title: string;
@@ -36,10 +37,12 @@ export function finishSession(state: PrototypeState, timer: ActiveTimer, seconds
   const category = details.category.trim() || (details.area === "do" ? "Work" : "Rest");
   let projects = state.projects;
   let tasks = state.tasks;
-  let projectId = projects.find((project) => project.id === details.projectId)?.id;
+  const selectedProject = projects.find((project) => project.id === details.projectId);
+  if (selectedProject && projectArea(selectedProject) !== details.area) throw new Error("Choose a project in the selected area.");
+  let projectId = selectedProject?.id;
   if (details.newProjectName?.trim()) {
     projectId = makeId();
-    projects = [...projects, { id: projectId, name: details.newProjectName.trim(), description: "", color: "sage", milestones: [] }];
+    projects = [...projects, { id: projectId, name: details.newProjectName.trim(), area: details.area, description: "", color: "sage", milestones: [] }];
   }
   let taskId = tasks.find((task) => task.id === details.taskId)?.id;
   if (details.createTask) {

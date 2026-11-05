@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import AreaToggle from "./AreaToggle";
 import { ArrowRight, Check } from "lucide-react";
 import {
   Activity,
@@ -10,6 +11,7 @@ import {
   Task,
 } from "@/lib/prototype/types";
 import { relativeDay } from "@/lib/prototype/seed";
+import { projectArea, projectsInArea } from "@/lib/prototype/projects";
 export const uid = () => crypto.randomUUID();
 const categories = [
   "Move",
@@ -32,7 +34,8 @@ export function TaskForm({
   initialProject?: string | null;
   onSave: (task: Task) => void;
 }) {
-  const [area, setArea] = useState<Area>(initialProject ? "do" : initialArea),
+  const initial = projects.find((project) => project.id === initialProject);
+  const [area, setArea] = useState<Area>(initial ? projectArea(initial) : initialArea),
     [projectId, setProjectId] = useState(initialProject || "");
   return (
     <form
@@ -84,31 +87,13 @@ export function TaskForm({
           <option value="be">Be · make room for life</option>
         </select>
       </label>
-      {area === "do" ? (
-        <label>
-          Project <span className="optional">optional</span>
-          <select
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-          >
-            <option value="">Just for me</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : (
-        <label>
-          Category
-          <select name="category">
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-      )}
+      <label>Project <span className="optional">optional</span>
+        <select aria-label="Project" value={projectId} onChange={(event) => setProjectId(event.target.value)}>
+          <option value="">Just for me</option>
+          {projectsInArea(projects,area).map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select>
+      </label>
+      {area === "be" && <label>Category<select name="category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label>}
       <button className="primary-button" type="submit">
         Make a little plan <ArrowRight size={16} />
       </button>
@@ -135,7 +120,7 @@ export function ActivityForm({
       onSubmit={(e) => {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
-        const project = projects.find((p) => p.name === category);
+        const project = area === "do" ? projectsInArea(projects, area).find((project) => project.name === category) : undefined;
         onSave({
           id: uid(),
           area,
@@ -169,7 +154,7 @@ export function ActivityForm({
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
           {(area === "be"
             ? categories
-            : [...projects.map((p) => p.name), "Learning", "Personal"]
+            : [...projectsInArea(projects, area).map((p) => p.name), "Learning", "Personal"]
           ).map((c) => (
             <option key={c}>{c}</option>
           ))}
@@ -229,9 +214,12 @@ export function ActivityForm({
 }
 export function ProjectForm({
   onSave,
+  initialArea = "do",
 }: {
+  initialArea?: Area;
   onSave: (project: Project) => void;
 }) {
+  const [area, setArea] = useState<Area>(initialArea);
   return (
     <form
       className="form"
@@ -241,6 +229,7 @@ export function ProjectForm({
         onSave({
           id: uid(),
           name: String(f.get("name")).trim(),
+          area,
           description: String(f.get("description")).trim(),
           color: "sage",
           milestones: [],
@@ -250,6 +239,7 @@ export function ProjectForm({
       <p className="muted">
         A place for something you want to bring into the world.
       </p>
+      <div className="modal-area-field"><span>Area</span><AreaToggle label="Project area" value={area} onChange={setArea} /></div>
       <label>
         Project name
         <input

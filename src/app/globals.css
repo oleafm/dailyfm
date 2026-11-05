@@ -3742,3 +3742,27 @@ h1 em {
 .session-review-modal .session-finish-actions { position: sticky; bottom: -24px; background: #fff; padding: 12px 0 4px; z-index: 1; }
 @media (max-width: 760px) { .session-review-modal { padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); max-height: calc(100dvh - 12px); } .session-review-modal .session-finish-actions { bottom: calc(-20px - env(safe-area-inset-bottom)); } .session-review-modal .session-area-switch { margin: 0; } }
 @media (max-width: 360px) { .session-review-modal .session-receipt strong, .session-review-modal .session-finish-form input.session-duration-input { font-size: 32px; } .session-review-modal .session-area-switch button { padding: 9px 12px; } .session-assignment-row { gap: 12px; } }
+
+/* Filter history within a stable calendar frame. */
+.activity-history-filters { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.activity-history-filters .quiet-select { width: 120px; }
+.activity-history-filters .activity-year-select { width: 82px; }
+.activity-card .contribution-grid { grid-template-rows: repeat(7, minmax(0, 1fr)); }
+.activity-card .day-square { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; justify-self: center; align-self: center; }
+.activity-card .day-labels { padding-top: 24px; padding-bottom: 4px; }
+.activity-card .month-labels span { white-space: nowrap; text-align: center; }
+.activity-card .month-labels span:first-child { text-align: left; }
+.activity-card .month-labels span:last-child { text-align: right; }
+.session-project-field { display: grid; gap: 8px; }
+.session-project-field .session-new-project { justify-self: start; font-size: 11px; }
+
+/* The same descriptive area control in project and timer dialogs. */
+.modal-area-field { display: grid; gap: 10px; color: #555; font-size: 12px; }
+.modal-area-switch { width: 100%; margin: 0; }
+.modal-area-switch button { flex: 1; justify-content: center; min-width: 0; }
+.modal-area-switch button > span { display: inline; }
+.session-assignment-row { grid-template-columns: minmax(0, 1fr); gap: 13px; }
+@media (max-width: 760px) {
+  .modal-area-switch button { flex-wrap: wrap; column-gap: 6px; row-gap: 2px; padding: 10px 8px; }
+  .modal-area-switch button > span { flex-basis: 100%; font-size: 9px; }
+}

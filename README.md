@@ -49,3 +49,7 @@ Guided daily journaling with mood and energy, reflection prompts, editable histo
 ## Task pages
 
 Open a task’s name to see its description, progress notes, total focused time, and session history. Completing a task automatically saves its active session. See [task behavior and storage](docs/TASKS.md). Run `npm run test:tasks` for lifecycle and time-accounting checks.
+
+## Activity history
+
+“Your days” supports recent 8, 16, 26, and 52-week ranges. Accounts older than one year also get a calendar-year filter based on their Supabase registration date. Selecting a year includes all its dates, including leap day; selecting a week range returns to recent history. The calendar frame stays the same size across filters at a given screen width, with square cells sized to fit. Day counts follow the displayed period; streak and momentum metrics continue to describe current consistency. Run `npm run test:activity` for date, registration-age, and sizing checks.
