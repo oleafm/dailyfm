@@ -3711,3 +3711,34 @@ h1 em {
 @keyframes drawer-enter { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
 @media (max-width: 760px) { .drawer-backdrop { padding: 8px; } .task-drawer { border-radius: 18px; } .drawer-header { padding: 18px; } .drawer-content { padding: 16px 18px 24px; } .task-drawer .task-stat-grid strong { font-size: 17px; } .task-drawer .task-stat-grid span { font-size: 9px; } }
 @media (prefers-reduced-motion: reduce) { .task-drawer { animation: none; } }
+
+/* Compact time review; retain the full-sized time summary. */
+.session-review-backdrop { z-index: 1000; }
+.session-review-modal { padding: 24px; max-width: 500px; }
+.session-review-modal .modal-header { margin-top: 0; margin-bottom: 16px; align-items: center; }
+.session-review-modal .modal-header h2 { font-size: 27px; }
+.session-review-modal .session-finish-form { gap: 13px; }
+.session-review-modal .session-receipt { position: relative; min-height: 156px; padding: 23px; }
+.session-time-tools { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 4px; }
+.session-time-tools button { width: 32px; height: 32px; color: #333; border-radius: 50%; }
+.session-time-tools button:hover { background: #e3e3e3; }
+.session-review-modal .session-finish-form input.session-duration-input { font-size: 34px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -1px; width: 200px; max-width: calc(100% - 24px); text-align: center; margin: 0; padding: 0 4px; height: 41px; min-height: 41px; line-height: 1.2; background: #fff; border-color: #ccc; }
+.session-reset-confirm { border-top: 1px solid #ddd; padding-top: 12px; margin-top: 4px; font-size: 12px; width: 100%; }
+.session-reset-confirm > div { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 10px; }
+.session-reset-confirm .secondary-button { min-height: 36px; padding: 8px 16px; }
+.session-destination { color: #777; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.session-destination strong { color: #333; font-weight: 600; }
+.session-assignment-row { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 16px; align-items: end; }
+.session-assignment-row .session-area-field { gap: 6px; }
+.session-review-modal .session-area-switch button { min-height: 40px; padding: 9px 16px; }
+.session-review-modal .session-area-switch { padding: 3px; }
+.session-review-modal .session-finish-form label > input:not([type="range"]):not([type="file"]), .session-review-modal .session-finish-form label > select { margin-top: 6px; padding: 9px 11px; min-height: 42px; }
+.session-review-modal .session-assignment-row select { height: 46px; }
+.session-extra-details summary { font-size: 12px; font-weight: 600; color: #555; cursor: pointer; }
+.session-extra-content { display: flex; flex-direction: column; gap: 13px; padding-top: 16px; }
+.session-create-options { display: grid; justify-items: start; gap: 12px; }
+.session-create-options label { width: 100%; }
+.session-create-options .text-button { font-size: 11px; }
+.session-review-modal .session-finish-actions { position: sticky; bottom: -24px; background: #fff; padding: 12px 0 4px; z-index: 1; }
+@media (max-width: 760px) { .session-review-modal { padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); max-height: calc(100dvh - 12px); } .session-review-modal .session-finish-actions { bottom: calc(-20px - env(safe-area-inset-bottom)); } .session-review-modal .session-area-switch { margin: 0; } }
+@media (max-width: 360px) { .session-review-modal .session-receipt strong, .session-review-modal .session-finish-form input.session-duration-input { font-size: 32px; } .session-review-modal .session-area-switch button { padding: 9px 12px; } .session-assignment-row { gap: 12px; } }

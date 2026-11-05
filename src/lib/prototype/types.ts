@@ -36,6 +36,8 @@ export interface Task {
   archivedAt?: string;
 }
 export interface TimerSession {
+  durationAdjusted?: boolean;
+  originalDurationSeconds?: number;
   id: string;
   taskId?: string;
   title?: string;

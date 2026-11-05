@@ -2,6 +2,9 @@
 import { useEffect, useRef, useId, ReactNode } from "react";
 import { ArrowUpRight, X } from "lucide-react";
 
+const modalStack: HTMLDivElement[] = [];
+let modalBodyOverflow = "";
+
 export function Modal({
   title,
   eyebrow,
@@ -9,6 +12,7 @@ export function Modal({
   onClose,
   wide = false,
   presentation = "modal",
+  className = "",
 }: {
   title: string;
   eyebrow?: string;
@@ -16,6 +20,7 @@ export function Modal({
   onClose: () => void;
   wide?: boolean;
   presentation?: "modal" | "drawer";
+  className?: string;
 }) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
@@ -23,9 +28,10 @@ export function Modal({
   close.current = onClose;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement;
-    const overflow = document.body.style.overflow;
+    if (!modalStack.length) modalBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const panel = ref.current!;
+    modalStack.push(panel);
     const focusable = () =>
       Array.from(
         panel.querySelectorAll<HTMLElement>(
@@ -34,6 +40,7 @@ export function Modal({
       ).filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);
     focusable()[0]?.focus();
     function key(e: KeyboardEvent) {
+      if (modalStack[modalStack.length - 1] !== panel) return;
       if (e.key === "Escape") close.current();
       if (e.key === "Tab") {
         const list = focusable(),
@@ -51,20 +58,22 @@ export function Modal({
     }
     document.addEventListener("keydown", key);
     return () => {
-      document.body.style.overflow = overflow;
+      const index = modalStack.indexOf(panel);
+      if (index !== -1) modalStack.splice(index, 1);
+      document.body.style.overflow = modalStack.length ? "hidden" : modalBodyOverflow;
       document.removeEventListener("keydown", key);
       previous?.focus();
     };
   }, []);
   return (
     <div
-      className={presentation === "drawer" ? "drawer-backdrop" : "modal-backdrop"}
+      className={`${presentation === "drawer" ? "drawer-backdrop" : "modal-backdrop"} ${className === "session-review-modal" ? "session-review-backdrop" : ""}`}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className={presentation === "drawer" ? "task-drawer" : `modal ${wide ? "modal-wide" : ""}`}
+        className={presentation === "drawer" ? "task-drawer" : `modal ${wide ? "modal-wide" : ""} ${className}`}
         ref={ref}
         role="dialog"
         aria-modal="true"

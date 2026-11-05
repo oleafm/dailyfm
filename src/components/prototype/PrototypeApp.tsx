@@ -40,7 +40,7 @@ import {
 
 import ActivityGrid from "./ActivityGrid";
 import TasksView from "./TasksView";
-import { changeTaskStatus, editTaskSession, finishAssignedTimer, taskStatus } from "@/lib/prototype/tasks";
+import { changeTaskStatus, editTaskSession, taskStatus } from "@/lib/prototype/tasks";
 import QuoteCard from "./QuoteCard";
 import ReflectView, { GuidedJournalForm } from "./ReflectView";
 import { saveReflection } from "@/lib/prototype/journal";
@@ -321,21 +321,16 @@ function Workspace({
   function stopTimer() {
     if (!timer) return;
     const at = Date.now();
-    const assigned = state.tasks.some((task) => task.id === timer.taskId) || state.projects.some((project) => project.id === timer.projectId);
-    if (assigned) {
-      setState((current) => finishAssignedTimer(current, timer, at, uid) || current);
-      setTimer(null);
-      announce(timer.taskId ? "Task completed and focus time recorded." : "Project focus time recorded.", "session");
-      return;
-    }
-    pauseTimer();
-    setTimer((current) => current ? { ...current, endedAt: new Date(at).toISOString() } : null);
+    const elapsed = timer.elapsed + (timer.runningSince !== null ? Math.max(0, Math.floor((at - timer.runningSince) / 1000)) : 0);
+    setNow(at);
+    setTimer({ ...timer, elapsed, runningSince: null, endedAt: timer.endedAt || new Date(at).toISOString() });
     setDialog({ type: "session" });
   }
   function saveSession(details: SessionDetails) {
     if (!timer) return;
-    const elapsed = Math.max(1, seconds);
-    setState((current) => finishSession(current, timer, elapsed, details, uid));
+    const measured = Math.max(1, seconds);
+    const elapsed = details.durationSeconds ?? measured;
+    setState((current) => finishSession(current, timer, measured, details, uid));
     setTimer(null);
     announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus on this device.`, "session");
   }
@@ -949,8 +944,8 @@ function Workspace({
       )}
       {dialog?.type === "session" && timer && (
         <Modal
-          title="A moment, well spent."
-          eyebrow="YOUR FOCUS SESSION"
+          title="Save your time."
+          className="session-review-modal"
           onClose={close}
         >
           <SessionFinishForm
@@ -960,6 +955,7 @@ function Workspace({
             projects={state.projects}
             initialArea={area}
             onSave={saveSession}
+            onReset={() => { setTimer(null); announce("Session reset. No time was saved.", false); }}
           />
         </Modal>
       )}

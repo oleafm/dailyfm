@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { emptyAccount } from "../src/lib/account/repository";
-import { chronologicalActivities, displayTime, finishSession, SessionDetails } from "../src/lib/prototype/sessions";
+import { chronologicalActivities, displayTime, finishSession, parseFocusedDuration, SessionDetails } from "../src/lib/prototype/sessions";
 import { ActiveTimer, Activity } from "../src/lib/prototype/types";
 import { dateKey } from "../src/lib/prototype/seed";
 
@@ -69,3 +69,21 @@ describe("immediate focus and accurate time history", () => {
    assert.equal(displayTime(new Date(2026, 9, 28, 0, 5, 50).toISOString()), "12:05 am");
    assert.equal(displayTime(new Date(2026, 9, 28, 12, 9, 0).toISOString()), "12:09 pm");
  });
+
+it("accepts hh:mm:ss focused durations and rejects malformed or zero values",()=>{
+  assert.equal(parseFocusedDuration("01:20:05"),4805);assert.equal(parseFocusedDuration("100:00:00"),360000);
+  for(const value of ["", "00:00:00", "-1:00:00", "01:60:00", "01:10:99", "one hour", "1:2:3"])assert.equal(parseFocusedDuration(value),null);
+});
+it("stores corrected focus duration and its original measurement while preserving start/end times",()=>{
+  const state=finishSession(fresh(),timer,120,{...details,durationSeconds:60},()=>"corrected");
+  assert.equal(state.sessions[0].durationSeconds,60);assert.equal(state.sessions[0].originalDurationSeconds,120);assert.equal(state.sessions[0].durationAdjusted,true);assert.equal(state.activities[0].minutes,1);assert.equal(state.sessions[0].startedAt,timer.startedAt);assert.equal(state.sessions[0].endedAt,timer.endedAt);
+});
+it("rejects corrected focus beyond the recorded window, negative, zero, or fractional duration",()=>{
+  for(const durationSeconds of [0,-1,0.5,1801])assert.throws(()=>finishSession(fresh(),timer,120,{...details,durationSeconds},()=>"invalid"),/recorded session/);
+});
+
+it("saving a reviewed task session adds a log and leaves the task open",()=>{
+  const state=fresh();state.tasks=[{id:"task",title:"Integrate Stripe",area:"do",category:"Work",completed:false}];
+  const result=finishSession(state,timer,120,{...details,taskId:"task",durationSeconds:90},()=>"reviewed");
+  assert.equal(result.tasks[0].completed,false);assert.equal(result.tasks[0].status,"in_progress");assert.equal(result.sessions[0].taskId,"task");assert.equal(result.sessions[0].durationSeconds,90);assert.equal(result.activities.filter(activity=>activity.kind==="task").length,0);
+});
