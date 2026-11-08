@@ -619,44 +619,46 @@ function Workspace({
                   />
                 </div>
               </div>
-              <div className="dashboard-grid second-row">
-                <PlanCard
-                  area={area}
-                  tasks={state.tasks}
-                  onToggle={toggleTask}
-                  onFocus={focusTask}
-                  onOpen={openTask}
-                  onNew={() => setDialog({ type: "task" })}
-                  onCategory={(category) =>
-                    setDialog({ type: "activity", category })
-                  }
-                />
-                <ReflectionCard
-                  done={!!checkIn}
-                  onClick={() => setDialog({ type: "checkin" })}
-                />
-              </div>
-              <div className="dashboard-grid third-row">
-                <section className="card today-story">
-                  <SectionHeading
-                    eyebrow="YOU SHOWED UP TODAY"
-                    title="Here’s what happened."
-                    action="Your day"
-                    onAction={() => setDialog({ type: "day", id: today })}
+              <div className="dashboard-grid today-content-columns">
+                <div className="today-content-column">
+                  <PlanCard
+                    area={area}
+                    tasks={state.tasks}
+                    onToggle={toggleTask}
+                    onFocus={focusTask}
+                    onOpen={openTask}
+                    onNew={() => setDialog({ type: "task" })}
+                    onCategory={(category) =>
+                      setDialog({ type: "activity", category })
+                    }
                   />
-                  <ActivityRows
-                    activities={chronologicalActivities(todays.filter((a) => a.area === area).slice(-4), state.sessions)}
-                    onOpenTask={openTask}
+                  <section className="card today-story">
+                    <SectionHeading
+                      eyebrow="YOU SHOWED UP TODAY"
+                      title="Here’s what happened."
+                      action="Your day"
+                      onAction={() => setDialog({ type: "day", id: today })}
+                    />
+                    <ActivityRows
+                      activities={chronologicalActivities(todays.filter((a) => a.area === area).slice(-4), state.sessions)}
+                      onOpenTask={openTask}
+                    />
+                    <button
+                      className="text-button story-add"
+                      onClick={() => setDialog({ type: "activity" })}
+                    >
+                      <Plus size={15} />
+                      There was something else…
+                    </button>
+                  </section>
+                </div>
+                <div className="today-content-column">
+                  <ReflectionCard
+                    done={!!checkIn}
+                    onClick={() => setDialog({ type: "checkin" })}
                   />
-                  <button
-                    className="text-button story-add"
-                    onClick={() => setDialog({ type: "activity" })}
-                  >
-                    <Plus size={15} />
-                    There was something else…
-                  </button>
-                </section>
-                <QuoteCard compact />
+                  <QuoteCard compact />
+                </div>
               </div>
             </>
           )}

@@ -139,7 +139,7 @@ export function TaskList({
           )}
         </div>
       ))}
-      {!expanded && tasks.length > initialLimit && <button className="text-button task-view-more" onClick={() => setExpanded(true)}>View more ({tasks.length - initialLimit}) <ArrowRight size={14} /></button>}
+      {tasks.length > initialLimit && <button className="text-button task-view-more" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? "Show less" : `View more (${tasks.length - initialLimit})`} <ArrowRight size={14} /></button>}
       {!tasks.length && (
         <Empty>A fresh page. Add something you want to make time for.</Empty>
       )}

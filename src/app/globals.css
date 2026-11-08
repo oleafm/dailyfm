@@ -3766,3 +3766,11 @@ h1 em {
   .modal-area-switch button { flex-wrap: wrap; column-gap: 6px; row-gap: 2px; padding: 10px 8px; }
   .modal-area-switch button > span { flex-basis: 100%; font-size: 9px; }
 }
+
+/* Today columns grow independently; each stack keeps a consistent card gap. */
+.today-content-columns { margin-top: 20px; align-items: start; }
+.today-content-column { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (max-width: 1200px) {
+  .today-content-columns { margin-top: 17px; }
+  .today-content-column { gap: 17px; }
+}
