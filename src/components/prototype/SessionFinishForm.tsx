@@ -5,7 +5,7 @@ import { ActiveTimer, Area, Project, Task } from "@/lib/prototype/types";
 import { displayTime, parseFocusedDuration, recordedSessionSeconds, SessionDetails } from "@/lib/prototype/sessions";
 import { clock } from "./TimerCard";
 import AreaToggle from "./AreaToggle";
-import { projectArea, projectsInArea } from "@/lib/prototype/projects";
+import { projectArea, activeProjectsInArea, projectCategories } from "@/lib/prototype/projects";
 
 export default function SessionFinishForm({ timer, seconds, tasks, projects, initialArea, onSave, onReset }: {
   timer: ActiveTimer; seconds: number; tasks: Task[]; projects: Project[]; initialArea: Area;
@@ -14,10 +14,10 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
   const original = tasks.find((task) => task.id === timer.taskId);
   const originalProject = projects.find((project) => project.id === (original?.projectId || timer.projectId));
   const [area, setArea] = useState<Area>(original?.area || (originalProject && projectArea(originalProject)) || initialArea);
-  const [taskId, setTaskId] = useState(original?.id || "");
+  const [taskId, setTaskId] = useState(!originalProject?.completedAt ? original?.id || "" : "");
   const [title, setTitle] = useState(original?.title || originalProject?.name || "Focus session");
-  const [projectId, setProjectId] = useState(originalProject && projectArea(originalProject) === area ? originalProject.id : "");
-  const [category, setCategory] = useState(original?.category || (area === "do" ? "Work" : "Rest"));
+  const [projectId, setProjectId] = useState(originalProject && !originalProject.completedAt && projectArea(originalProject) === area ? originalProject.id : "");
+  const [category, setCategory] = useState(original?.category || originalProject?.category || (area === "do" ? "Work" : "Rest"));
   const [note, setNote] = useState("");
   const [projectName, setProjectName] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -27,8 +27,8 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
   const [error, setError] = useState("");
   const timeInput = useRef<HTMLInputElement>(null);
   useEffect(() => { if (editingTime) { timeInput.current?.focus(); timeInput.current?.select(); } }, [editingTime]);
-  const categories = area === "do" ? ["Work", "Learn", "Create", "Admin", "Other"] : ["Move", "Learn", "Reading", "Create", "Explore", "People", "Reflect", "Rest"];
-  const availableProjects = projectsInArea(projects, area);
+  const categories = projectCategories(area);
+  const availableProjects = activeProjectsInArea(projects, area);
   const hasProject = projectId === "__new" || availableProjects.some((project) => project.id === projectId);
   const projectTasks = tasks.filter((task) => task.projectId === projectId && task.area === area && !task.archivedAt && (!task.completed || task.id === original?.id));
   const linkedStandaloneTask = original?.id === taskId && original.area === area && (!projectId || original.projectId === projectId);
@@ -61,8 +61,8 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
     if (projectId === "__new" && !projectName.trim()) { setError("Give the new project a name.");return; }
     setError("");
     onSave({ title: title.trim(), area, category, durationSeconds: duration,
-      taskId: selectedTaskId && selectedTaskId !== "__new" ? selectedTaskId : undefined,
-      createTask: selectedTaskId === "__new", projectId: projectId !== "__new" ? projectId || undefined : undefined,
+      taskId: area === "do" && selectedTaskId && selectedTaskId !== "__new" ? selectedTaskId : undefined,
+      createTask: area === "do" && selectedTaskId === "__new", projectId: projectId !== "__new" ? projectId || undefined : undefined,
       newProjectName: projectId === "__new" ? projectName.trim() : undefined, note });
   }}>
     <div className="session-receipt">
@@ -77,10 +77,10 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
     <details className="session-extra-details" open={detailsOpen} onToggle={(event) => setDetailsOpen(event.currentTarget.open)}>
       <summary>Add details <span className="optional">optional</span></summary>
       <div className="session-extra-content">
-        {hasProject && <label>Task <span className="optional">optional</span><select aria-label="Task" value={selectedTaskId} onChange={(event) => {
+        {area === "do" && hasProject && <label>Task <span className="optional">optional</span><select aria-label="Task" value={selectedTaskId} onChange={(event) => {
           setTaskId(event.target.value);const task=projectTasks.find((task) => task.id === event.target.value);if(task){setTitle(task.title);setCategory(task.category);}
         }}><option value="">No task</option>{taskId === "__new" && <option value="__new">New task from this session</option>}{projectTasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}</select></label>}
-        {hasProject && <button type="button" className="text-button" onClick={() => setTaskId(taskId === "__new" ? "" : "__new")}>{taskId === "__new" ? "Cancel new task" : "Create a task from this session"}</button>}
+        {area === "do" && hasProject && <button type="button" className="text-button" onClick={() => setTaskId(taskId === "__new" ? "" : "__new")}>{taskId === "__new" ? "Cancel new task" : "Create a task from this session"}</button>}
         <label>A note<textarea aria-label="Session note" rows={2} maxLength={1000} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Anything you’d like to remember?" /></label>
 
       </div>

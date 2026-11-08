@@ -54,7 +54,7 @@ it("aborts an invalid legacy migration without losing the old data",async()=>{
 });
 it("keeps every populated personal-data collection private across accounts",async()=>{
  const record=await load(alice);const data=record.data;
- data.projects=[{id:"z",name:"Private project",description:"Personal",color:"sage",area:"be",milestones:[]}];
+ data.projects=[{id:"z",name:"Private project",description:"Personal",color:"sage",area:"be",category:"Reading",completedAt:"2026-11-08T12:00:00Z",milestones:[]}];
  data.tasks=[{id:"t",title:"Private task",area:"be",category:"Work",projectId:"z",completed:false,status:"in_progress",description:"Private task description",notes:[{id:"note",text:"Private progress",createdAt:"2026-10-29T09:00:00Z"}],archivedAt:"2026-10-29T10:00:00Z"}];
  data.sessions=[{id:"s",taskId:"t",projectId:"z",startedAt:"2026-10-26T09:00:00Z",durationSeconds:60,durationAdjusted:true,originalDurationSeconds:120,date:"2026-10-26",note:"Private session"}];
  data.activities=[{id:"a",title:"Private activity",date:"2026-10-26",area:"be",category:"Work",kind:"session",minutes:1,source:"timer",projectId:"z"}];

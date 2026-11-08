@@ -39,12 +39,14 @@ export function finishSession(state: PrototypeState, timer: ActiveTimer, seconds
   let tasks = state.tasks;
   const selectedProject = projects.find((project) => project.id === details.projectId);
   if (selectedProject && projectArea(selectedProject) !== details.area) throw new Error("Choose a project in the selected area.");
+  if (selectedProject?.completedAt) throw new Error("Reopen this project before logging more time.");
   let projectId = selectedProject?.id;
   if (details.newProjectName?.trim()) {
     projectId = makeId();
-    projects = [...projects, { id: projectId, name: details.newProjectName.trim(), area: details.area, description: "", color: "sage", milestones: [] }];
+    projects = [...projects, { id: projectId, name: details.newProjectName.trim(), area: details.area, category, description: "", color: "sage", milestones: [] }];
   }
   let taskId = tasks.find((task) => task.id === details.taskId)?.id;
+  if (projectId && details.area === "be" && details.createTask) throw new Error("Be projects contain time logs, not tasks.");
   if (details.createTask) {
     taskId = makeId();
     tasks = [...tasks, { id: taskId, title, area: details.area, category, projectId, completed: false, status: "in_progress" }];

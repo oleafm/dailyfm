@@ -72,6 +72,7 @@ export default function TimerCard({
       >
         <span ref={clockRef}>{clock(seconds)}</span>
       </div>
+      <div className="focus-controls">
       {timer ? (
         <div className="timer-actions">
           <button
@@ -102,6 +103,7 @@ export default function TimerCard({
       )}
       <div className="focus-bottom">
         <ArrowDown size={12} /> {active ? "Focus linked to this task." : projectName ? "Focus linked to this project." : "No target. Just intentional time."}
+      </div>
       </div>
     </section>
   );

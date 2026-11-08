@@ -39,10 +39,11 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
-import { projectArea, projectsInArea } from "@/lib/prototype/projects";
+import { projectArea, activeProjectsInArea, setProjectCompleted, editProjectSessionNote } from "@/lib/prototype/projects";
 import TasksView from "./TasksView";
 import { changeTaskStatus, editTaskSession, taskStatus } from "@/lib/prototype/tasks";
 import QuoteCard from "./QuoteCard";
+import TodayColumns from "./TodayColumns";
 import ReflectView, { GuidedJournalForm } from "./ReflectView";
 import { saveReflection } from "@/lib/prototype/journal";
 import TimerCard, { clock } from "./TimerCard";
@@ -276,6 +277,7 @@ function Workspace({
     }
     const contextProjectId = selected ? selected.projectId : projectId || (view === "projects" ? selectedProject || undefined : undefined);
     const contextProject = state.projects.find((project) => project.id === contextProjectId);
+    if (contextProject?.completedAt && !timer) { setToast("Reopen this project before starting focus."); return; }
     const time = Date.now();
     setNow(time);
     if (id) setState((current) => ({ ...current, tasks: current.tasks.map((task) => task.id === id && !task.completed ? { ...task, status: "in_progress" } : task) }));
@@ -437,7 +439,7 @@ function Workspace({
               <Plus size={14} />
             </button>
           </div>
-          {projectsInArea(state.projects, area).slice(0, 4).map((p) => (
+          {activeProjectsInArea(state.projects, area).slice(0, 4).map((p) => (
             <button
               key={p.id}
               onClick={() => navigate("projects", p.id)}
@@ -619,11 +621,11 @@ function Workspace({
                   />
                 </div>
               </div>
-              <div className="dashboard-grid today-content-columns">
+              <TodayColumns>
                 <div className="today-content-column">
                   <PlanCard
                     area={area}
-                    tasks={state.tasks}
+                    tasks={state.tasks.filter(task => !task.projectId || !state.projects.some(project => project.id === task.projectId && projectArea(project) === "be"))}
                     onToggle={toggleTask}
                     onFocus={focusTask}
                     onOpen={openTask}
@@ -659,7 +661,7 @@ function Workspace({
                   />
                   <QuoteCard compact />
                 </div>
-              </div>
+              </TodayColumns>
             </>
           )}
           {view === "projects" && (
@@ -674,6 +676,12 @@ function Workspace({
               onOpenTask={openTask}
               onFocus={(id) => startTimer(id)}
               onProjectFocus={(id) => startTimer(undefined, id)}
+              activeTimerProject={timer?.projectId || state.tasks.find(t => t.id === timer?.taskId)?.projectId}
+              onCompleteProject={(id, completed) => {
+                if (completed && timer && (timer.projectId === id || state.tasks.find(t => t.id === timer.taskId)?.projectId === id)) return;
+                setState(current => setProjectCompleted(current, id, completed, new Date().toISOString()));
+              }}
+              onSessionNote={(projectId, sessionId, note) => setState(current => editProjectSessionNote(current, projectId, sessionId, note))}
               onNewTask={() => setDialog({ type: "task" })}
             />
           )}

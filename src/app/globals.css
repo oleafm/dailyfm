@@ -3774,3 +3774,34 @@ h1 em {
   .today-content-columns { margin-top: 17px; }
   .today-content-column { gap: 17px; }
 }
+
+/* Baseline heights match across Today, while longer left lists stay independent. */
+@media (min-width: 1001px) {
+  .today-content-column:first-child > :first-child { min-height: var(--today-card-1-height, 326px); }
+  .today-content-column:first-child > :nth-child(2) { min-height: var(--today-card-2-height, 280px); }
+}
+.project-workspace { align-items: stretch; }
+.project-header-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.project-overview-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.project-overview-filters { width: fit-content; margin-bottom: 20px; }
+.project-log { padding: 20px 0; border-top: 1px solid var(--line); }
+.project-log-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.project-log-heading h3 { font-size: 14px; font-weight: 600; }
+.project-log-heading p, .project-log-note { font-size: 12px; color: #777; line-height: 1.7; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.project-log-heading > strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.project-log summary { cursor: pointer; font-size: 12px; margin-top: 12px; }
+.project-log .form { margin-top: 12px; }
+/* Use spare timer height for the clock, keeping controls at the padded bottom. */
+.focus-card { display: flex; flex-direction: column; container-type: inline-size; }
+.focus-card .timer-clock { flex: 1; width: 100%; min-height: 135px; margin: 14px 0; font-size: clamp(36px, 14cqw, 76px); }
+.focus-controls { flex-shrink: 0; width: 100%; }
+.focus-controls > .focus-button { width: 100%; }
+.focus-controls .timer-actions { margin-top: 0; }
+.focus-controls .focus-bottom { margin-bottom: 0; }
+@media (max-width: 760px) {
+  .project-header-actions { width: 100%; }
+  .project-header-actions button { flex: 1; }
+  .project-log-heading { flex-wrap: wrap; }
+  .project-overview-stats { gap: 8px; }
+  .project-overview-stats .card { padding: 18px 12px; }
+}

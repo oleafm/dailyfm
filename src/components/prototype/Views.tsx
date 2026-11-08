@@ -39,7 +39,7 @@ import Illustration from "./Illustration";
 import QuoteCard from "./QuoteCard";
 import { clock } from "./TimerCard";
 import { weeklySummary } from "@/lib/prototype/weekly";
-import { projectsInArea } from "@/lib/prototype/projects";
+import { projectArea, projectCounts, projectsInArea } from "@/lib/prototype/projects";
 import { projectCompletions, taskHistory } from "@/lib/prototype/tasks";
 
 function ActivityTime({ activity }: { activity: Activity }) {
@@ -285,6 +285,9 @@ export function ProjectsView({
   onNewTask,
   onOpenTask,
   onProjectFocus,
+  onCompleteProject,
+  onSessionNote,
+  activeTimerProject,
 }: {
   state: PrototypeState;
   area: Area;
@@ -296,17 +299,24 @@ export function ProjectsView({
   onNewTask: () => void;
   onOpenTask: (id: string) => void;
   onProjectFocus: (id: string) => void;
+  onCompleteProject: (id: string, completed: boolean) => void;
+  onSessionNote: (projectId: string, sessionId: string, note: string) => void;
+  activeTimerProject?: string;
 }) {
   const project = state.projects.find((p) => p.id === selected);
   const [taskFilter, setTaskFilter] = useState("open");
   const [allCompleted, setAllCompleted] = useState(false);
+  const [projectFilter, setProjectFilter] = useState("active");
+  const [allLogs, setAllLogs] = useState(false);
+  const counts = projectCounts(state.projects, area);
   const evidence = (p: Project) => {
     const acts = state.activities.filter((a) => a.projectId === p.id);
+    const sessions = state.sessions.filter(s => s.projectId === p.id);
     return {
-      minutes: acts.reduce((sum, a) => sum + a.minutes, 0),
-      sessions: acts.filter((a) => a.kind === "session").length,
+      minutes: sessions.reduce((sum,s) => sum + s.durationSeconds / 60,0) + acts.filter(a => a.kind !== "session").reduce((sum,a) => sum+a.minutes,0),
+      sessions: sessions.length,
       days: new Set(
-        acts.filter((a) => a.date >= relativeDay(-6) && a.date <= relativeDay(0)).map((a) => a.date),
+        [...acts, ...sessions].filter((a) => a.date >= relativeDay(-6) && a.date <= relativeDay(0)).map((a) => a.date),
       ).size,
       tasks: state.tasks.filter((t) => t.projectId === p.id && t.completed)
         .length,
@@ -315,6 +325,8 @@ export function ProjectsView({
   };
   if (project) {
     const stats = evidence(project);
+    const isBe = projectArea(project) === "be";
+    const logs = state.sessions.filter(s => s.projectId === project.id).sort((a,b) => b.startedAt.localeCompare(a.startedAt));
     const completedToday = projectCompletions(state, project.id, relativeDay(0));
     return (
       <>
@@ -332,14 +344,17 @@ export function ProjectsView({
             <span className={`project-dot ${project.color}`} />
           </h1>
           <p>{project.description}</p></div>
-          <button className="secondary-button" onClick={() => onProjectFocus(project.id)}><Play size={15} />Start project focus</button>
+          <div className="project-header-actions">
+            {!project.completedAt && <button className="secondary-button" onClick={() => onProjectFocus(project.id)}><Play size={15} />Start project focus</button>}
+            <button className="secondary-button" disabled={!project.completedAt && activeTimerProject === project.id} title={activeTimerProject === project.id ? "Save or reset the current timer before completing this project" : undefined} onClick={() => onCompleteProject(project.id, !project.completedAt)}>{project.completedAt ? "Reopen project" : "Complete project"}</button>
+          </div>
         </div>
         <div className="project-stat-grid">
           {[
             { value: duration(stats.minutes), label: "intentional time" },
             { value: stats.sessions, label: "focus sessions" },
             { value: `${stats.days} of 7`, label: "days with activity" },
-            { value: stats.tasks, label: "tasks completed" },
+            isBe ? { value: project.completedAt ? "Completed" : "Active", label: "project status" } : { value: stats.tasks, label: "tasks completed" },
           ].map((s) => (
             <div className="card" key={s.label}>
               <strong>{s.value}</strong>
@@ -347,7 +362,14 @@ export function ProjectsView({
             </div>
           ))}
         </div>
-        <div className="detail-grid project-workspace">
+        {isBe ? <section className="card project-time-logs">
+          <SectionHeading eyebrow="TIME FOR LIFE" title="Your time logs." />
+          {logs.length ? <>{(allLogs ? logs : logs.slice(0, 10)).map(session => <article className="project-log" key={session.id}>
+            <div className="project-log-heading"><div><h3>{session.title || project.name}</h3><p>{prettyDate(session.date)} · {displayTime(session.startedAt)}{session.endedAt ? ` — ${displayTime(session.endedAt)}` : " · End time not recorded"}</p></div><strong>{clock(session.durationSeconds)}</strong></div>
+            {session.note && <p className="project-log-note">{session.note}</p>}
+            <details><summary>{session.note ? "Edit note" : "Add a note"}</summary><form className="form" onSubmit={event => {event.preventDefault();const form = event.currentTarget;onSessionNote(project.id,session.id,String(new FormData(form).get("note") || ""));form.closest("details")?.removeAttribute("open");}}><label>Note<textarea key={session.note} name="note" defaultValue={session.note} maxLength={1000} rows={2} /></label><button className="secondary-button" type="submit">Save note</button></form></details>
+          </article>)}{logs.length > 10 && <button className="text-button" onClick={() => setAllLogs(!allLogs)}>{allLogs ? "Show less" : "View all logs"}</button>}</> : <Empty>Start a project focus session. Your time and notes will appear here.</Empty>}
+        </section> : <div className="detail-grid project-workspace">
           <section className="card project-tasks">
             <div className="project-tasks-heading"><SectionHeading title="Tasks." />
               <button className="primary-button" onClick={onNewTask}><Plus size={16} />Add a Task</button>
@@ -371,7 +393,7 @@ export function ProjectsView({
               </article>;
             })}{!allCompleted && completedToday.length > 10 && <button className="text-button task-view-more" onClick={() => setAllCompleted(true)}>View more ({completedToday.length - 10}) <ArrowRight size={14} /></button>}</div> : <Empty>No tasks completed today yet. Completed tasks will appear here as you go.</Empty>}
           </section>
-        </div>
+        </div>}
       </>
     );
   }
@@ -381,15 +403,19 @@ export function ProjectsView({
         <div>
           <p className="eyebrow">MAKE SOMETHING MEANINGFUL</p>
           <h1>Work in progress.</h1>
-          <p>Not a percentage. A collection of things you’ve moved forward.</p>
+          <p>Your active projects, completed chapters, and time well spent.</p>
         </div>
         <button className="primary-button" onClick={onNew}>
           <Plus size={16} />
           New project
         </button>
       </div>
+      <div className="project-stat-grid project-overview-stats">
+        {[{value: counts.active, label: "active projects"}, {value: counts.completed, label: "completed projects"}, {value: `${counts.percent}%`, label: "projects completed"}].map(stat => <div className="card" key={stat.label}><strong>{stat.value}</strong><span>{stat.label}</span></div>)}
+      </div>
+      <div className="filter-tabs project-overview-filters" role="group" aria-label="Filter projects">{["active", "completed"].map(value => <button key={value} className={projectFilter === value ? "active" : ""} aria-pressed={projectFilter === value} onClick={() => setProjectFilter(value)}>{value === "active" ? "Active" : "Completed"}</button>)}</div>
       <div className="projects-grid">
-        {projectsInArea(state.projects, area).map((p, index) => {
+        {projectsInArea(state.projects, area).filter(p => projectFilter === "completed" ? !!p.completedAt : !p.completedAt).map((p, index) => {
           const stats = evidence(p);
           return (
             <button
@@ -428,8 +454,8 @@ export function ProjectsView({
                     <small>sessions</small>
                   </strong>
                   <strong>
-                    {stats.tasks}
-                    <small>tasks done</small>
+                    {projectArea(p) === "be" ? stats.days : stats.tasks}
+                    <small>{projectArea(p) === "be" ? "days this week" : "tasks done"}</small>
                   </strong>
                 </div>
                 <div className="project-last">
@@ -442,9 +468,7 @@ export function ProjectsView({
                     : "Your first step is still ahead."}
                 </p>
                 <div className="project-milestones">
-                  {p.milestones.length
-                    ? `${p.milestones.filter((m) => m.completed).length} of ${p.milestones.length} milestones`
-                    : "Your own path, your own pace"}
+                  {p.completedAt ? "Completed project" : p.category || "Your own path, your own pace"}
                   <ChevronRight size={15} />
                 </div>
               </div>

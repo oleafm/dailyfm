@@ -11,7 +11,7 @@ import {
   Task,
 } from "@/lib/prototype/types";
 import { relativeDay } from "@/lib/prototype/seed";
-import { projectArea, projectsInArea } from "@/lib/prototype/projects";
+import { projectArea, activeProjectsInArea, projectCategories } from "@/lib/prototype/projects";
 export const uid = () => crypto.randomUUID();
 const categories = [
   "Move",
@@ -90,7 +90,7 @@ export function TaskForm({
       <label>Project <span className="optional">optional</span>
         <select aria-label="Project" value={projectId} onChange={(event) => setProjectId(event.target.value)}>
           <option value="">Just for me</option>
-          {projectsInArea(projects,area).map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+          {activeProjectsInArea(projects,area).filter(project => projectArea(project) === "do").map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
         </select>
       </label>
       {area === "be" && <label>Category<select name="category">{categories.map((category) => <option key={category}>{category}</option>)}</select></label>}
@@ -120,7 +120,7 @@ export function ActivityForm({
       onSubmit={(e) => {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
-        const project = area === "do" ? projectsInArea(projects, area).find((project) => project.name === category) : undefined;
+        const project = area === "do" ? activeProjectsInArea(projects, area).find((project) => project.name === category) : undefined;
         onSave({
           id: uid(),
           area,
@@ -154,7 +154,7 @@ export function ActivityForm({
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
           {(area === "be"
             ? categories
-            : [...projectsInArea(projects, area).map((p) => p.name), "Learning", "Personal"]
+            : [...activeProjectsInArea(projects, area).map((p) => p.name), "Learning", "Personal"]
           ).map((c) => (
             <option key={c}>{c}</option>
           ))}
@@ -220,6 +220,7 @@ export function ProjectForm({
   onSave: (project: Project) => void;
 }) {
   const [area, setArea] = useState<Area>(initialArea);
+  const [category, setCategory] = useState(projectCategories(initialArea)[0]);
   return (
     <form
       className="form"
@@ -229,7 +230,7 @@ export function ProjectForm({
         onSave({
           id: uid(),
           name: String(f.get("name")).trim(),
-          area,
+          area, category,
           description: String(f.get("description")).trim(),
           color: "sage",
           milestones: [],
@@ -239,7 +240,8 @@ export function ProjectForm({
       <p className="muted">
         A place for something you want to bring into the world.
       </p>
-      <div className="modal-area-field"><span>Area</span><AreaToggle label="Project area" value={area} onChange={setArea} /></div>
+      <div className="modal-area-field"><span>Area</span><AreaToggle label="Project area" value={area} onChange={next => { setArea(next); setCategory(projectCategories(next)[0]); }} /></div>
+      <label>Category<select aria-label="Project category" value={category} onChange={e => setCategory(e.target.value)}>{projectCategories(area).map(value => <option key={value}>{value}</option>)}</select></label>
       <label>
         Project name
         <input
