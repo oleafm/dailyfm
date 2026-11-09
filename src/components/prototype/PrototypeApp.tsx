@@ -253,6 +253,10 @@ function Workspace({
     window.history.pushState(null, "", `/?${params}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  function switchArea(nextArea: Area) {
+    if (nextArea === area) return;
+    navigate(view === "tasks" ? "projects" : view, null, nextArea);
+  }
   function openTask(id: string, taskArea?: Area) {
     const task = state.tasks.find((task) => task.id === id);
     setSelectedTask(id); setMobileMenu(false);
@@ -514,7 +518,7 @@ function Workspace({
               className={area === "do" ? "selected" : ""}
               aria-pressed={area === "do"}
               onClick={() => {
-                navigate("today", null, "do");
+                switchArea("do");
               }}
             >
               <BriefcaseBusiness size={14} />
@@ -524,7 +528,7 @@ function Workspace({
               className={area === "be" ? "selected" : ""}
               aria-pressed={area === "be"}
               onClick={() => {
-                navigate("today", null, "be");
+                switchArea("be");
               }}
             >
               <Leaf size={14} />
@@ -698,6 +702,7 @@ function Workspace({
           {view === "insights" && (
             <InsightsView
               state={state}
+              area={area}
               onCheckIn={() => setDialog({ type: "checkin" })}
               onLogActivity={() => setDialog({ type: "activity" })}
               onProject={(id) => navigate("projects", id)}

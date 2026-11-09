@@ -28,3 +28,18 @@ it("includes saved sessions without mirrors and never double-counts paired sessi
   const result=summary(state);assert.equal(result.recent.length,2);assert.equal(result.project?.minutes,4);assert.equal(result.project?.days,1);
 });
 it("keeps an empty week empty", () => {const result=summary(fresh());assert.equal(result.activeDays,0);assert.equal(result.checkInDays,0);assert.equal(result.project,undefined);});
+it("filters weekly activities and project insights by area while retaining shared reflections", () => {
+ const state=fresh();state.projects=[{id:"work",name:"Work project",area:"do",description:"",color:"sage",milestones:[]},{id:"life",name:"Life project",area:"be",description:"",color:"sage",milestones:[]}];
+ state.activities=[activity("do","2026-10-28","work"),{...activity("be","2026-10-27","life"),area:"be",category:"Reading",minutes:30}];
+ state.checkIns=[{id:"journal",date:"2026-10-28",mood:6,movedForward:"",reflection:{id:"reflection",date:"2026-10-28",text:"Shared reflection"}}];
+ const work=weeklySummary(state,"2026-10-22","2026-10-28","do"),life=weeklySummary(state,"2026-10-22","2026-10-28","be");
+ assert.deepEqual(work.recent.map(a=>a.id),["do"]);assert.equal(work.project?.project.id,"work");assert.equal(work.project?.minutes,10);
+ assert.deepEqual(life.recent.map(a=>a.id),["be"]);assert.equal(life.project?.project.id,"life");assert.equal(life.project?.minutes,30);
+ assert.equal(work.checkInDays,1);assert.equal(life.checkInDays,1);
+});
+it("uses a legacy session's project area and leaves an area with no history empty", () => {
+ const state=fresh();state.projects=[{id:"life",name:"Reading",area:"be",description:"",color:"sage",milestones:[]}];
+ state.sessions=[{id:"legacy",projectId:"life",date:"2026-10-28",startedAt:"2026-10-28T09:00:00Z",durationSeconds:120,note:""}];
+ assert.equal(weeklySummary(state,"2026-10-22","2026-10-28","be").recent.length,1);
+ const result=weeklySummary(state,"2026-10-22","2026-10-28","do");assert.equal(result.recent.length,0);assert.equal(result.activeDays,0);assert.equal(result.project,undefined);
+});

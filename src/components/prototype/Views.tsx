@@ -650,17 +650,19 @@ export function MemoriesView({
 }
 export function InsightsView({
   state,
+  area,
   onCheckIn,
   onLogActivity,
   onProject,
 }: {
   state: PrototypeState;
+  area: Area;
   onCheckIn: () => void;
   onLogActivity: () => void;
   onProject: (id?: string) => void;
 }) {
   const from = relativeDay(-6), today = relativeDay(0);
-  const { recent, activeDays, checkInDays, project } = weeklySummary(state, from, today);
+  const { recent, activeDays, checkInDays, project } = weeklySummary(state, from, today, area);
   const time = recent.reduce((sum, a) => sum + a.minutes, 0);
   const groups = recent.reduce<Record<string, number>>((all, a) => {
     all[a.category] = (all[a.category] || 0) + a.minutes;
@@ -738,7 +740,7 @@ export function InsightsView({
                   <div
                     className="bar-stack"
                     style={{ height: `${((d.do + d.be) / max) * 100}%` }}
-                    title={`${prettyDate(d.date)}: Do ${duration(d.do)}, Be ${duration(d.be)}`}
+                    title={`${prettyDate(d.date)}: ${area === "do" ? "Do" : "Be"} ${duration(d[area])}`}
                   >
                     <div className="bar-do" style={{ flex: d.do }} />
                     <div className="bar-be" style={{ flex: d.be }} />
@@ -750,12 +752,8 @@ export function InsightsView({
           </div>
           <div className="chart-legend">
             <span>
-              <i className="bar-do" />
-              Do · meaningful output
-            </span>
-            <span>
-              <i className="bar-be" />
-              Be · a life well lived
+              <i className={area === "do" ? "bar-do" : "bar-be"} />
+              {area === "do" ? "Do · meaningful output" : "Be · a life well lived"}
             </span>
           </div>
         </section>
