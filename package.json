@@ -14,7 +14,8 @@
     "test:weekly": "node --import tsx tests/weekly.test.ts",
     "test:tasks": "node --import tsx tests/tasks.test.ts",
     "test:activity": "node --import tsx tests/activity-history.test.ts",
-    "test:projects": "node --import tsx tests/projects.test.ts"
+    "test:projects": "node --import tsx tests/projects.test.ts",
+    "test:countdown": "node --import tsx tests/countdown.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

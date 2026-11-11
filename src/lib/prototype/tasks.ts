@@ -1,6 +1,7 @@
 import { ActiveTimer, PrototypeState, Task, TaskStatus } from "./types";
 import { finishSession } from "./sessions";
 import { dateKey } from "./seed";
+import { finishTimer, timerElapsed } from "./active-timer";
 
 export function taskStatus(task: Task): TaskStatus {
   return task.completed ? "done" : task.status === "in_progress" ? "in_progress" : "todo";
@@ -16,8 +17,8 @@ export function changeTaskStatus(state: PrototypeState, id: string, status: Task
   if (!task || taskStatus(task) === status) return state;
   let next = state;
   if (status === "done" && timer?.taskId === id) {
-    const seconds = timer.elapsed + (timer.runningSince !== null ? Math.max(0, Math.floor((now - timer.runningSince) / 1000)) : 0);
-    next = finishSession(state, { ...timer, runningSince: null, endedAt: timer.endedAt || new Date(now).toISOString() }, seconds,
+    const seconds = timerElapsed(timer, now);
+    next = finishSession(state, finishTimer(timer, now), seconds,
       { title: task.title, area: task.area, category: task.category, projectId: task.projectId, taskId: id, note: "" }, makeId);
   }
   const recordedAt = new Date(now).toISOString();

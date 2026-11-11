@@ -1,4 +1,5 @@
 "use client";
+import { countdownTarget } from "@/lib/prototype/active-timer";
 import { useState } from "react";
 import { ArrowRight, Archive, Play, Check, Plus } from "lucide-react";
 import { ActiveTimer, PrototypeState, Task, TaskNote, TaskStatus, TimerSession } from "@/lib/prototype/types";
@@ -48,10 +49,10 @@ function TaskDetail(props: Props & { task: Task }) {
       <label className="task-panel-status">Status<select aria-label="Status" value={status} disabled={!!task.archivedAt} onChange={(event) => props.onStatus(task.id, event.target.value as TaskStatus)}>{Object.entries(statusNames).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div>
     {!task.archivedAt && !task.completed && <div className="task-panel-focus">
-      <button className="primary-button" onClick={() => active && timer?.runningSince !== null ? props.onPause() : props.onFocus(task.id)}><Play size={14} />{active ? timer?.runningSince !== null ? "Pause focus" : "Resume focus" : "Start focus"}</button>
+      <button className="primary-button" onClick={() => active && timer?.countdownCompleted ? props.onFinish() : active && timer?.runningSince !== null ? props.onPause() : props.onFocus(task.id)}><Play size={14} />{active ? timer?.countdownCompleted ? "Review session" : timer?.runningSince !== null ? "Pause focus" : "Resume focus" : "Start focus"}</button>
       {active && <button className="secondary-button" onClick={props.onFinish}>Finish</button>}
     </div>}
-    {active && <p className="task-active-timer" role="status">{timer?.runningSince !== null ? "Focus in progress" : "Focus paused"} · {clock(seconds)}<span>Marking this task Done will save this session automatically.</span></p>}
+    {active && <p className="task-active-timer" role="status">{timer?.countdownCompleted ? "Countdown complete" : timer?.runningSince !== null ? "Focus in progress" : "Focus paused"} · {clock(timer && countdownTarget(timer) !== null ? Math.max(0, countdownTarget(timer)! - seconds) : seconds)}<span>Marking this task Done will save this session automatically.</span></p>}
     <div className="task-stat-grid">{[[clock(history.seconds), "total focused time"], [String(history.sessions.length), "saved sessions"], [String(history.days), "days with focus"]].map(([value,label]) => <div className="card" key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
     <div className="task-workspace-grid">
       <section className="card">

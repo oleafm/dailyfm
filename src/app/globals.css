@@ -3805,3 +3805,19 @@ h1 em {
   .project-overview-stats { gap: 8px; }
   .project-overview-stats .card { padding: 18px 12px; }
 }
+
+/* Countdown setup shares the timer's existing monochrome palette. */
+.timer-setup { margin-top: 18px; flex-shrink: 0; }
+.timer-mode-switch { display: flex; padding: 3px; gap: 3px; border: 1px solid #444; border-radius: 24px; }
+.timer-mode-switch button { flex: 1; padding: 8px 10px; border-radius: 20px; font-size: 11px; color: #aaa; }
+.timer-mode-switch button.selected { background: #fff; color: #181818; font-weight: 600; }
+.countdown-settings { margin-top: 12px; }
+.countdown-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.countdown-presets button { border: 1px solid #555; color: #ccc; border-radius: 16px; padding: 6px 10px; font-size: 11px; }
+.countdown-presets button[aria-pressed="true"] { background: #fff; color: #181818; border-color: #fff; }
+.countdown-custom { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 10px; }
+.countdown-custom label { display: flex; align-items: center; gap: 6px; color: #bbb; }
+.countdown-custom input { width: 70px; border: 1px solid #555; border-radius: 8px; padding: 7px; background: #222; color: white; font-size: 12px; }
+.countdown-sound { display: flex; align-items: center; gap: 5px; color: #ddd; padding: 7px 0; }
+.countdown-preview { color: #bbb; text-decoration: underline; padding: 7px 0; }
+.timer-actions > .stop-button:only-child { flex: 1; border: 1px solid #666; border-radius: 24px; padding: 13px; }

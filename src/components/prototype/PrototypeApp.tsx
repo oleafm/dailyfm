@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { countdownTarget, finishTimer, timerDisplay, timerElapsed, TimerMode } from "@/lib/prototype/active-timer";
+import { TimerChime } from "@/lib/prototype/timer-sound";
 import { User as AccountUser } from "@supabase/supabase-js";
 import AccountGate from "../account/AccountGate";
 import { accountClient } from "@/lib/account/client";
@@ -122,6 +124,17 @@ function Workspace({
     [toast, setToast] = useState("");
   const [timer, setTimer] = useState<ActiveTimer | null>(null),
     [now, setNow] = useState(Date.now());
+  const [timerMode, setTimerMode] = useState<TimerMode>("stopwatch");
+  const [countdownMinutes, setCountdownMinutes] = useState(25);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const chime = useRef<TimerChime | null>(null);
+  const notifiedCountdown = useRef<string | null>(null);
+  useEffect(() => () => { chime.current?.close(); }, []);
+  function armSound() { chime.current ??= new TimerChime(); void chime.current.arm(); }
+  function previewSound() {
+    chime.current ??= new TimerChime();
+    void chime.current.arm().then(ready => { if (ready) chime.current?.play(); else setToast("Sound is unavailable in this browser. The timer will still show when time is up."); });
+  }
   const [storageWarning, setStorageWarning] = useState(false);
   const [celebration, setCelebration] = useState<{ kind: CelebrationKind; message?: string; id: number } | null>(null);
   function celebrate(kind: CelebrationKind, message?: string) {
@@ -137,6 +150,12 @@ function Workspace({
   useEffect(() => {
     if (!dataReady) return;
     try {
+      const preferences = JSON.parse(localStorage.getItem(`${timerKey}:preferences`) || "null");
+      if (preferences) {
+        setTimerMode(preferences.mode === "countdown" ? "countdown" : "stopwatch");
+        if (Number.isInteger(preferences.minutes) && preferences.minutes >= 1 && preferences.minutes <= 1440) setCountdownMinutes(preferences.minutes);
+        setSoundEnabled(preferences.sound !== false);
+      }
       const stored = JSON.parse(localStorage.getItem(timerKey) || "null");
       if (
         stored &&
@@ -182,9 +201,16 @@ function Workspace({
     }
   }, [timer, ready, timerKey]);
   useEffect(() => {
+    if (!ready) return;
+    try { localStorage.setItem(`${timerKey}:preferences`, JSON.stringify({ mode: timerMode, minutes: countdownMinutes, sound: soundEnabled })); } catch { /* Timer controls still work without saved preferences. */ }
+  }, [ready, timerKey, timerMode, countdownMinutes, soundEnabled]);
+  useEffect(() => {
     if (!timer?.runningSince) return;
-    const tick = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(tick);
+    const update = () => setNow(Date.now());
+    const tick = setInterval(update, 1000);
+    window.addEventListener("focus", update);
+    document.addEventListener("visibilitychange", update);
+    return () => { clearInterval(tick); window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
   }, [timer?.runningSince]);
   useEffect(() => {
     if (!toast) return;
@@ -217,12 +243,21 @@ function Workspace({
     };
   }, [view, ready, hasConflict]);
   const today = relativeDay(0);
-  const seconds = timer
-    ? timer.elapsed +
-      (timer.runningSince
-        ? Math.max(0, Math.floor((now - timer.runningSince) / 1000))
-        : 0)
-    : 0;
+  const seconds = timer ? timerElapsed(timer, now) : 0;
+  const displayedSeconds = timer ? timerDisplay(timer, now) : 0;
+  function completeCountdown(current: ActiveTimer, at: number) {
+    setTimer(finishTimer(current, at));
+    setDialog({ type: "session" });
+    if (notifiedCountdown.current === current.startedAt) return;
+    notifiedCountdown.current = current.startedAt;
+    const sounded = current.soundEnabled !== false && chime.current?.play();
+    setToast(current.soundEnabled !== false && !sounded ? "Time is up. Sound is unavailable; review your session below." : "Time is up. Your focus session is ready to save.");
+  }
+  useEffect(() => {
+    if (!ready || !timer || timer.runningSince === null || timer.countdownCompleted) return;
+    const target = countdownTarget(timer);
+    if (target !== null && timerElapsed(timer, now) >= target) completeCountdown(timer, now);
+  }, [timer, now, ready]);
   const activeTask = state.tasks.find((t) => t.id === timer?.taskId);
   const activeProject = state.projects.find((project) => project.id === timer?.projectId);
   const todays = state.activities.filter((a) => a.date === today);
@@ -272,6 +307,9 @@ function Workspace({
     } else { url.searchParams.delete("task"); window.history.pushState(null,"",url.pathname+url.search); }
   }
   function startTimer(id?: string, projectId?: string) {
+    if (timer?.countdownCompleted) { setDialog({ type: "session" }); return; }
+    if (!timer && timerMode === "countdown" && (!Number.isInteger(countdownMinutes) || countdownMinutes < 1 || countdownMinutes > 1440)) { setToast("Choose a countdown between 1 and 1,440 minutes."); return; }
+    if ((timer ? timer.mode === "countdown" && timer.soundEnabled !== false : timerMode === "countdown" && soundEnabled)) armSound();
     const selected = state.tasks.find((task) => task.id === id);
     if (selected?.completed || selected?.archivedAt) { setToast("Reopen or restore this task before starting focus."); return; }
 
@@ -289,6 +327,9 @@ function Workspace({
       current
         ? { ...current, endedAt: undefined, runningSince: current.runningSince || time }
         : {
+            mode: timerMode,
+            targetSeconds: timerMode === "countdown" ? countdownMinutes * 60 : undefined,
+            soundEnabled,
             taskId: id,
             projectId: contextProjectId,
             area: selected?.area || (contextProject ? projectArea(contextProject) : area),
@@ -313,16 +354,13 @@ function Workspace({
   }
   function pauseTimer() {
     const time = Date.now();
+    if (timer && countdownTarget(timer) !== null && timerElapsed(timer, time) >= countdownTarget(timer)!) { completeCountdown(timer, time); return; }
     setNow(time);
     setTimer((current) =>
       current
         ? {
             ...current,
-            elapsed:
-              current.elapsed +
-              (current.runningSince
-                ? Math.max(0, Math.floor((time - current.runningSince) / 1000))
-                : 0),
+            elapsed: timerElapsed(current, time),
             runningSince: null,
           }
         : null,
@@ -331,9 +369,9 @@ function Workspace({
   function stopTimer() {
     if (!timer) return;
     const at = Date.now();
-    const elapsed = timer.elapsed + (timer.runningSince !== null ? Math.max(0, Math.floor((at - timer.runningSince) / 1000)) : 0);
     setNow(at);
-    setTimer({ ...timer, elapsed, runningSince: null, endedAt: timer.endedAt || new Date(at).toISOString() });
+    if (countdownTarget(timer) !== null && timerElapsed(timer, at) >= countdownTarget(timer)!) { completeCountdown(timer, at); return; }
+    setTimer(finishTimer(timer, at));
     setDialog({ type: "session" });
   }
   function saveSession(details: SessionDetails) {
@@ -342,7 +380,7 @@ function Workspace({
     const elapsed = details.durationSeconds ?? measured;
     setState((current) => finishSession(current, timer, measured, details, uid));
     setTimer(null);
-    announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus on this device.`, "session");
+    announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus.`, "session");
   }
   function setTaskStatus(id: string, status: TaskStatus) {
     const task = state.tasks.find((task) => task.id === id);
@@ -469,14 +507,6 @@ function Workspace({
               <span>Start new focus</span>
             </button>
           )}
-          {!account && <button
-            className="prototype-label"
-            onClick={() => setDialog({ type: "about" })}
-          >
-            <span />
-            Demo · on this device
-            <ArrowUpRight size={12} />
-          </button>}
           <button
             className="profile"
             onClick={() => setDialog({ type: account ? "account" : "about" })}
@@ -550,13 +580,13 @@ function Workspace({
           >{state.user.name.slice(0, 1).toUpperCase()}</button>}
         </header>
         <main id="main-content" className="page-content">
-          {(!account || saveStatus === "error") && <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
+          {saveStatus === "error" && <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
             {account ? <>
               <span className="live-dot" />
               <span>Not saved to your account. Keep this tab open.</span>
               {saveStatus === "error" && <button className="text-button" onClick={retry}>Retry save</button>}
               {saveError && <span>{saveError}</span>}
-            </> : <>Demo mode · Changes stay in this browser. Connect Supabase to use a real account.{saveError && <span>{saveError}</span>}</>}
+            </> : <span>{saveError || "Changes could not be saved. Keep this tab open."}</span>}
           </div>}
           {storageWarning && (
             <div className="storage-warning" role="status">
@@ -614,6 +644,9 @@ function Workspace({
                 <div ref={focusRef}>
                   <TimerCard
                     clockRef={clockRef}
+                    mode={timerMode} onModeChange={setTimerMode}
+                    countdownMinutes={countdownMinutes} onMinutesChange={setCountdownMinutes}
+                    soundEnabled={soundEnabled} onSoundChange={setSoundEnabled} onPreviewSound={previewSound}
                     tasks={state.tasks}
                     projectName={activeProject?.name}
                     area={area}
@@ -760,9 +793,9 @@ function Workspace({
           >
             <span className={timer.runningSince ? "live-dot" : "paused-dot"} />
             {activeTask?.title || activeProject?.name || "Focus session"}
-            <strong>{clock(seconds)}</strong>
+            <strong aria-label={timer.mode === "countdown" ? "Time remaining" : "Time elapsed"}>{clock(displayedSeconds)}</strong>
           </button>
-          <button
+          {!timer.countdownCompleted && <button
             className="icon-button"
             aria-label={timer.runningSince ? "Pause session" : "Resume session"}
             onClick={() =>
@@ -770,9 +803,9 @@ function Workspace({
             }
           >
             {timer.runningSince ? <Pause size={16} /> : <Play size={16} />}
-          </button>
+          </button>}
           <button className="text-button" onClick={stopTimer}>
-            Finish
+            {timer.countdownCompleted ? "Review" : "Finish"}
           </button>
         </div>
       )}
@@ -1065,9 +1098,9 @@ function Workspace({
               <strong>Be</strong> is for experiences that make you feel like
               you.
             </p>
-            <p className="muted">
-              {account ? "Your tasks, completed sessions, check-ins, and memories are saved to your private account. A running timer stays on the device where you started it. Changes save automatically; keep this tab open if a save error appears." : "This demo starts with sample history. Changes are saved only in this browser. Real accounts start fresh once Supabase is connected; demo history is never imported automatically."}
-            </p>
+            {account && <p className="muted">
+              Your tasks, completed sessions, and check-ins are saved to your private account. Changes save automatically.
+            </p>}
             <button className="primary-button" onClick={close}>
               A little, every day.
               <ArrowRight size={16} />

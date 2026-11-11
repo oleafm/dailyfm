@@ -124,6 +124,10 @@ export interface PrototypeState {
   completions: ChallengeCompletion[];
 }
 export interface ActiveTimer {
+  mode?: "stopwatch" | "countdown";
+  targetSeconds?: number;
+  soundEnabled?: boolean;
+  countdownCompleted?: boolean;
   projectId?: string;
   taskId?: string;
   area?: Area;
