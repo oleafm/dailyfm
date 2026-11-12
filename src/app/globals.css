@@ -275,7 +275,10 @@ input[type="range"] {
   background: #e8e8e8;
   border-radius: 50%;
   font-size: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
+.avatar-image { width: 100%; height: 100%; object-fit: cover; }
 .profile small {
   display: block;
   color: #999;
@@ -3687,6 +3690,17 @@ h1 em {
 .drawer-header h2 { font-size: 22px; letter-spacing: -.6px; }
 .drawer-header .eyebrow { margin-bottom: 6px; }
 .drawer-content { padding: 20px 24px 28px; }
+.profile-summary { display: flex; align-items: center; gap: 16px; }
+.profile-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.profile-summary h3 { font-size: 20px; }
+.profile-summary p { margin-top: 4px; }
+.profile-photo { width: 64px; height: 64px; font-size: 24px; }
+.profile-section { border-top: 1px solid #eee; margin-top: 18px; padding-top: 16px; }
+.profile-section h3 { font-size: 16px; margin-bottom: 12px; }
+.profile-section .form { margin-top: 0; gap: 12px; }
+.profile-section .profile-photo-form { margin-top: 16px; }
+.profile-photo-form input { display: block; margin-top: 6px; max-width: 100%; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .task-panel-actions { display: flex; align-items: end; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
 .task-panel-actions button { min-height: 36px; padding: 8px 12px; font-size: 11px; }
 .task-panel-actions button:disabled { opacity: .5; cursor: default; }

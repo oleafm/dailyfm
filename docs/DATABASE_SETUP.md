@@ -14,6 +14,8 @@ Then run `supabase/migrations/202610260001_owned_records.sql` once. For an exist
 
 Run this migration, **not** the old `supabase/schema.sql`. The old tables belong to an earlier UI and are unused by the current application. The new migration is additive and can be rerun. It enables row-level security and grants access only to the signed-in owner's record. Do not disable RLS.
 
+For profile photo uploads, also apply `supabase/migrations/20261109231219_profile_photos.sql`. It creates a private Storage bucket where each account can read and replace its own photo. The drawer also works with initials when no photo is set.
+
 ## 2. Configure the application
 
 Copy `.env.local.example` to `.env.local` on the machine running Next.js and enter these values from Supabase's project connection/API settings:
@@ -35,7 +37,7 @@ In Supabase Authentication settings, enable Email/password sign-in. Keep email c
 
 Open the app, choose **Create an account**, and confirm your email when requested. Then sign in and press Start focus. The timer starts immediately. On Finish, add a title, category, and optionally assign or create a task/project, then save the session. Changes save automatically. If a failed-save banner appears, retry and keep the page open until it clears. Open the app in another browser/device and sign in to verify the session appears there.
 
-Click your sidebar profile to edit your name or sign out. Finish/discard a timer and save outstanding changes before signing out.
+Click your sidebar profile to open the drawer. It shows your email and how long ago you joined, and lets you edit your name, upload an optional photo, change your password, or sign out. Finish or discard a timer and save outstanding changes before signing out.
 
 ## Storage and recovery
 
