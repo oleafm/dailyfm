@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Info, Sprout } from "lucide-react";
-import { Activity } from "@/lib/prototype/types";
+import { ActivityFilters } from "@/lib/prototype/activity-filters";
+import { Activity, Area, Project } from "@/lib/prototype/types";
 import { historyGeometry, historyWindow, historyYears } from "@/lib/prototype/activity-history";
 import {
   momentum,
@@ -12,11 +13,14 @@ import {
 
 export default function ActivityGrid({
   activities,
+  area, projects, categories, filters, onFiltersChange,
   registeredAt,
   onDay,
   onMomentum,
 }: {
   activities: Activity[];
+  area: Area; projects: Project[]; categories: string[]; filters: ActivityFilters;
+  onFiltersChange: (filters: ActivityFilters) => void;
   registeredAt?: string;
   onDay: (date: string) => void;
   onMomentum: () => void;
@@ -83,11 +87,19 @@ export default function ActivityGrid({
           </select>}
           <select aria-label="Activity grid range" className="quiet-select" value={selectedYear === null ? weeks : "year"} onChange={(event) => { if (event.target.value === "year") return; chosenRange.current = true; setYear(null); setWeeks(Number(event.target.value)); }}>
             {selectedYear !== null && <option value="year">Full year</option>}
-            <option value={52}>Last 52 weeks</option><option value={26}>Last 26 weeks</option><option value={16}>Last 16 weeks</option><option value={8}>Last 8 weeks</option>
+            <option value={52}>Last 52 weeks</option><option value={26}>Last 26 weeks</option><option value={16}>Last 16 weeks</option>
           </select>
         </div>
       </div>
       <p className="muted grid-description">Small things. Seen over time.</p>
+      <div className="activity-scope-filters">
+        <label>Project<select aria-label="Activity grid project" className="quiet-select" value={filters.projectId} onChange={event => onFiltersChange({ ...filters, projectId: event.target.value })}>
+          <option value="">All projects</option>{projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
+        </select></label>
+        <label>Category<select aria-label="Activity grid category" className="quiet-select" value={filters.category} onChange={event => onFiltersChange({ ...filters, category: event.target.value })}>
+          <option value="">All categories</option>{categories.map(category => <option key={category} value={category}>{category}</option>)}
+        </select></label>
+      </div>
       <div className="contribution-chart">
         <div className="day-labels" style={{ rowGap: layout.gap }}>
           <span>Mon</span>
@@ -144,9 +156,7 @@ export default function ActivityGrid({
         <div>
           <span className="metric-label">Your rhythm</span>
           <p>
-            {streak(activities, "do")} <small>Do</small>
-            <span className="metric-divider">/</span>
-            {streak(activities, "be")} <small>Be</small>
+            {streak(activities, area)} <small>{area === "do" ? "Do" : "Be"}</small>
           </p>
           <span className="metric-note">
             Consecutive days, in your own way.

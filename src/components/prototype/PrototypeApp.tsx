@@ -41,6 +41,7 @@ import {
 } from "@/lib/prototype/seed";
 
 import ActivityGrid from "./ActivityGrid";
+import { ActivityFilters, activityFilterOptions, filterActivityHistory } from "@/lib/prototype/activity-filters";
 import { projectArea, activeProjectsInArea, setProjectCompleted, editProjectSessionNote } from "@/lib/prototype/projects";
 import TasksView from "./TasksView";
 import { changeTaskStatus, editTaskSession, taskStatus } from "@/lib/prototype/tasks";
@@ -87,6 +88,7 @@ type Dialog = {
     | "about";
   id?: string;
   category?: string;
+  history?: boolean;
 };
 const navigation: { view: View; label: string; icon: typeof Grid2X2 }[] = [
   { view: "today", label: "Today", icon: Grid2X2 },
@@ -115,6 +117,14 @@ function Workspace({
   const [accountError, setAccountError] = useState("");
   const [ready, setReady] = useState(false),
     [area, setArea] = useState<Area>("do");
+  const [historyFilters, setHistoryFilters] = useState<ActivityFilters>({ area: "do", projectId: "", category: "" });
+  const historyOptions = activityFilterOptions(state.activities, state.projects, area);
+  const effectiveHistoryFilters: ActivityFilters = {
+    area,
+    projectId: historyFilters.area === area && historyOptions.projects.some(p => p.id === historyFilters.projectId) ? historyFilters.projectId : "",
+    category: historyFilters.area === area && historyOptions.categories.includes(historyFilters.category) ? historyFilters.category : "",
+  };
+  const historyActivities = filterActivityHistory(state.activities, effectiveHistoryFilters);
   const [view, setView] = useState<View>(initialView === "tasks" ? "projects" : initialView),
     [selectedProject, setSelectedProject] = useState<string | null>(
       initialProject,
@@ -290,6 +300,7 @@ function Workspace({
   }
   function switchArea(nextArea: Area) {
     if (nextArea === area) return;
+    setHistoryFilters({ area: nextArea, projectId: "", category: "" });
     navigate(view === "tasks" ? "projects" : view, null, nextArea);
   }
   function openTask(id: string, taskArea?: Area) {
@@ -408,7 +419,8 @@ function Workspace({
   const selectedChallenge = state.challenges.find((c) => c.id === dialog?.id);
   const selectedMemory = state.completions.find((c) => c.id === dialog?.id);
   const selectedDay = dialog?.type === "day" ? dialog.id || today : today;
-  const dayActivities = state.activities.filter((a) => a.date === selectedDay);
+  const dayActivities = (dialog?.history ? historyActivities : state.activities).filter((a) => a.date === selectedDay);
+  const momentumActivities = dialog?.history ? historyActivities : state.activities;
   const dayCheckIn = state.checkIns.find((c) => c.date === selectedDay);
   if (account && (!dataReady || saveStatus === "conflict"))
     return (
@@ -636,10 +648,15 @@ function Workspace({
               </div>
               <div className="dashboard-grid">
                 <ActivityGrid
-                  activities={state.activities}
+                  activities={historyActivities}
+                  area={area}
+                  projects={historyOptions.projects}
+                  categories={historyOptions.categories}
+                  filters={effectiveHistoryFilters}
+                  onFiltersChange={setHistoryFilters}
                   registeredAt={account?.created_at}
-                  onDay={(date) => setDialog({ type: "day", id: date })}
-                  onMomentum={() => setDialog({ type: "momentum" })}
+                  onDay={(date) => setDialog({ type: "day", id: date, history: true })}
+                  onMomentum={() => setDialog({ type: "momentum", history: true })}
                 />
                 <div ref={focusRef}>
                   <TimerCard
@@ -981,10 +998,10 @@ function Workspace({
           <p className="day-summary-intro">
             {dayActivities.length
               ? `${dayActivities.length} meaningful ${dayActivities.length === 1 ? "moment" : "moments"}. ${duration(dayActivities.reduce((s, a) => s + a.minutes, 0))} of intentional time.`
-              : "Nothing recorded. A quiet day belongs in your story, too."}
+              : dialog.history ? "No activities match these filters for this day." : "Nothing recorded. A quiet day belongs in your story, too."}
           </p>
           <ActivityRows activities={dayActivities} sessions={state.sessions} />
-          {dayCheckIn && (
+          {dayCheckIn && !dialog.history && (
             <div className="day-reflection">
               <span>Mood · {dayCheckIn.mood}/10</span>
               <p>
@@ -1022,7 +1039,7 @@ function Workspace({
         >
           <div className="momentum-explanation">
             <strong>
-              {momentum(state.activities)}
+              {momentum(momentumActivities)}
               <ArrowUpRight size={28} />
             </strong>
             <p>
@@ -1034,7 +1051,7 @@ function Workspace({
               <b>
                 {
                   new Set(
-                    state.activities
+                    momentumActivities
                       .filter(
                         (a) => a.date >= relativeDay(-13) && a.date <= today,
                       )
@@ -1046,7 +1063,7 @@ function Workspace({
             </div>
             <div>
               <span>Current rhythm</span>
-              <b>{streak(state.activities)} days showing up</b>
+              <b>{streak(momentumActivities)} days showing up</b>
             </div>
             <p className="muted">
               This prototype combines recent active days (up to 55 points) and

@@ -3821,3 +3821,28 @@ h1 em {
 .countdown-sound { display: flex; align-items: center; gap: 5px; color: #ddd; padding: 7px 0; }
 .countdown-preview { color: #bbb; text-decoration: underline; padding: 7px 0; }
 .timer-actions > .stop-button:only-child { flex: 1; border: 1px solid #666; border-radius: 24px; padding: 13px; }
+
+/* A quiet comet follows the outer clock ring without moving the timer text. */
+.timer-comet {
+  position: absolute;
+  top: 50%; left: 50%; width: 139px; height: 139px;
+  overflow: visible; pointer-events: none; color: var(--accent);
+  opacity: 0; transform: translate(-50%, -50%) rotate(0deg);
+  animation: timer-comet-orbit 8s linear infinite paused;
+  transition: opacity 250ms ease;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 35%, transparent));
+}
+.timer-active .timer-comet { opacity: 1; animation-play-state: running; }
+.timer-value { position: relative; z-index: 1; }
+@keyframes timer-comet-orbit {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timer-comet { animation: none; transition: none; }
+}
+
+.activity-scope-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.activity-scope-filters label { display: grid; gap: 7px; min-width: 0; color: #777; font-size: 11px; }
+.activity-scope-filters .quiet-select { width: 100%; min-width: 0; height: 36px; padding-right: 30px; text-overflow: ellipsis; }
+.activity-card .activity-scope-filters + .contribution-chart { margin-top: 24px; }
+.activity-history-filters { flex-wrap: wrap; max-width: 100%; }

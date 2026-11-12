@@ -1,5 +1,5 @@
 "use client";
-import { RefObject } from "react";
+import { RefObject, useId } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -45,6 +45,7 @@ export default function TimerCard({
   onStop: () => void;
   clockRef: RefObject<HTMLSpanElement>;
 }) {
+  const cometGradient = useId();
   const target = timer ? countdownTarget(timer) : mode === "countdown" ? (Number.isFinite(countdownMinutes) ? countdownMinutes * 60 : 0) : null;
   const displayed = target === null ? seconds : Math.max(0, target - (timer ? seconds : 0));
   const active = tasks.find((t) => t.id === timer?.taskId);
@@ -91,7 +92,14 @@ export default function TimerCard({
         role="timer"
         aria-label={target === null ? `${seconds} seconds elapsed` : `${displayed} seconds remaining`}
       >
-        <span ref={clockRef}>{clock(displayed)}</span>
+        {timer && !timer.countdownCompleted && <svg className="timer-comet" viewBox="0 0 160 160" fill="none" aria-hidden="true" focusable="false">
+          <defs><linearGradient id={cometGradient} x1="37.5" y1="13.4" x2="80" y2="1" gradientUnits="userSpaceOnUse">
+            <stop stopColor="currentColor" stopOpacity="0" /><stop offset="1" stopColor="currentColor" />
+          </linearGradient></defs>
+          <path d="M37.5 13.4A79 79 0 0 1 80 1" stroke={`url(#${cometGradient})`} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="80" cy="1" r="3" fill="currentColor" />
+        </svg>}
+        <span className="timer-value" ref={clockRef}>{clock(displayed)}</span>
       </div>
       <div className="focus-controls">
       {timer ? (
