@@ -4,7 +4,7 @@ import { countdownTarget, finishTimer, timerDisplay, timerElapsed, TimerMode } f
 import { TimerChime } from "@/lib/prototype/timer-sound";
 import { User as AccountUser } from "@supabase/supabase-js";
 import AccountGate from "../account/AccountGate";
-import { accountClient } from "@/lib/account/client";
+import ProfileDrawer, { AvatarContent, useProfilePhoto } from "../account/ProfileDrawer";
 import { useWorkspace } from "@/lib/account/useWorkspace";
 import {
   ArrowRight,
@@ -114,7 +114,7 @@ function Workspace({
   const { state, setState, ready: dataReady, status: saveStatus, error: saveError, retry, loadCloud } = useWorkspace(account);
   const hasConflict = saveStatus === "conflict";
   const timerKey = account ? `${TIMER_KEY}:${account.id}` : TIMER_KEY;
-  const [accountError, setAccountError] = useState("");
+  const profilePhoto = useProfilePhoto(account?.id);
   const [ready, setReady] = useState(false),
     [area, setArea] = useState<Area>("do");
   const [historyFilters, setHistoryFilters] = useState<ActivityFilters>({ area: "do", projectId: "", category: "" });
@@ -523,7 +523,7 @@ function Workspace({
             className="profile"
             onClick={() => setDialog({ type: account ? "account" : "about" })}
           >
-            <span className="avatar">{state.user.name.slice(0, 1).toUpperCase()}</span>
+            <span className="avatar"><AvatarContent name={state.user.name} photo={profilePhoto.url} /></span>
             <span>
               {state.user.name}
               <small>A work in progress, too.</small>
@@ -589,7 +589,7 @@ function Workspace({
             className="mobile-account-button avatar"
             aria-label="Your account"
             onClick={() => setDialog({ type: "account" })}
-          >{state.user.name.slice(0, 1).toUpperCase()}</button>}
+          ><AvatarContent name={state.user.name} photo={profilePhoto.url} /></button>}
         </header>
         <main id="main-content" className="page-content">
           {saveStatus === "error" && <div className={`account-save-status ${saveStatus === "error" ? "has-error" : ""}`} role="status" aria-live="polite">
@@ -1077,29 +1077,17 @@ function Workspace({
         </Modal>
       )}
       {dialog?.type === "account" && account && (
-        <Modal title="Your account." eyebrow="YOUR SPACE" onClose={close}>
-          <form className="form" onSubmit={(event) => {
-            event.preventDefault();
-            const name = String(new FormData(event.currentTarget).get("name")).trim();
-            if (name) { setState((current) => ({ ...current, user: { ...current.user, name } })); close(); }
-          }}>
-            <p className="muted">{account.email}</p>
-            <label>Your name<input name="name" defaultValue={state.user.name} required maxLength={80} /></label>
-            <button className="primary-button">Save profile</button>
-            {(saveStatus !== "saved" || timer) && <p className="muted">Finish or discard your timer and wait for your changes to save before signing out.</p>}
-            {accountError && <p role="alert" className="account-error">{accountError}</p>}
-            <button className="secondary-button" type="button" disabled={saveStatus !== "saved" || !!timer} onClick={async () => {
-              const result = await accountClient!.auth.signOut();
-              if (result.error) setAccountError(result.error.message);
-              else {
-                try {
-                  localStorage.removeItem(`todaily-account-v1:${account.id}`);
-                  localStorage.removeItem(timerKey);
-                } catch { /* Signing out still clears Supabase authentication. */ }
-              }
-            }}>Sign out</button>
-          </form>
-        </Modal>
+        <ProfileDrawer
+          account={account}
+          name={state.user.name}
+          photo={profilePhoto.url}
+          onNameChange={(name) => setState((current) => ({ ...current, user: { ...current.user, name } }))}
+          onPhotoUpload={profilePhoto.upload}
+          saveStatus={saveStatus}
+          timerKey={timerKey}
+          hasTimer={!!timer}
+          onClose={close}
+        />
       )}
       {dialog?.type === "about" && (
         <Modal
