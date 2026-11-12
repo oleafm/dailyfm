@@ -10,7 +10,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { countdownTarget, TimerMode } from "@/lib/prototype/active-timer";
-import { ActiveTimer, Area, Task } from "@/lib/prototype/types";
+import { ActiveTimer, Area, Task, PomodoroSettings } from "@/lib/prototype/types";
 export function clock(seconds: number) {
   return [
     Math.floor(seconds / 3600),
@@ -30,8 +30,10 @@ export default function TimerCard({
   onPause,
   onStop,
   clockRef,
+  pomodoroSettings, onPomodoroChange, remainingSeconds,
   mode, onModeChange, countdownMinutes, onMinutesChange, soundEnabled, onSoundChange, onPreviewSound,
 }: {
+  pomodoroSettings: PomodoroSettings; onPomodoroChange: (settings: PomodoroSettings) => void; remainingSeconds: number;
   mode: TimerMode; onModeChange: (mode: TimerMode) => void;
   countdownMinutes: number; onMinutesChange: (minutes: number) => void;
   soundEnabled: boolean; onSoundChange: (enabled: boolean) => void; onPreviewSound: () => void;
@@ -46,8 +48,8 @@ export default function TimerCard({
   clockRef: RefObject<HTMLSpanElement>;
 }) {
   const cometGradient = useId();
-  const target = timer ? countdownTarget(timer) : mode === "countdown" ? (Number.isFinite(countdownMinutes) ? countdownMinutes * 60 : 0) : null;
-  const displayed = target === null ? seconds : Math.max(0, target - (timer ? seconds : 0));
+  const target = timer?.mode === "pomodoro" && timer.pomodoro ? (timer.pomodoro.phase === "focus" ? timer.pomodoro.focusSeconds : timer.pomodoro.breakSeconds) : timer ? countdownTarget(timer) : mode === "pomodoro" ? pomodoroSettings.focusSeconds : mode === "countdown" ? (Number.isFinite(countdownMinutes) ? countdownMinutes * 60 : 0) : null;
+  const displayed = timer?.mode === "pomodoro" ? remainingSeconds : target === null ? seconds : Math.max(0, target - (timer ? seconds : 0));
   const active = tasks.find((t) => t.id === timer?.taskId);
   return (
     <section
@@ -60,7 +62,7 @@ export default function TimerCard({
         />
       </div>
       <h2>
-        {timer?.countdownCompleted ? "Time is up." : timer
+        {timer?.countdownCompleted ? timer.mode === "pomodoro" ? "Pomodoro complete." : "Time is up." : timer
           ? active?.title || projectName || "Focus in progress."
           : area === "do"
             ? "One thing at a time."
@@ -77,16 +79,21 @@ export default function TimerCard({
       </p>
       {!timer && <div className="timer-setup">
         <div className="timer-mode-switch" role="group" aria-label="Timer mode">
-          {(["stopwatch", "countdown"] as const).map(value => <button key={value} type="button" aria-pressed={mode === value} className={mode === value ? "selected" : ""} onClick={() => onModeChange(value)}>{value === "stopwatch" ? "Stopwatch" : "Countdown"}</button>)}
+          {(["stopwatch", "countdown", "pomodoro"] as const).map(value => <button key={value} type="button" aria-pressed={mode === value} className={mode === value ? "selected" : ""} onClick={() => onModeChange(value)}>{value === "stopwatch" ? "Stopwatch" : value === "pomodoro" ? "Pomodoro" : "Countdown"}</button>)}
         </div>
+        {mode === "pomodoro" && <div className="pomodoro-settings">
+          {([{ key: "focusSeconds", label: "Focus minutes", max: 180, divisor: 60 }, { key: "breakSeconds", label: "Break minutes", max: 60, divisor: 60 }, { key: "totalSessions", label: "Sessions", max: 12, divisor: 1 }] as const).map(field => <label key={field.key}>{field.label}<input aria-label={field.label} type="number" min={1} max={field.max} step={1} value={Number.isFinite(pomodoroSettings[field.key]) ? pomodoroSettings[field.key] / field.divisor : ""} onChange={event => onPomodoroChange({ ...pomodoroSettings, [field.key]: event.target.value === "" ? NaN : Number(event.target.value) * field.divisor })} /></label>)}
+        </div>}
         {mode === "countdown" && <div className="countdown-settings">
           <div className="countdown-presets" role="group" aria-label="Countdown presets">{[5,15,25,45,60].map(minutes => <button key={minutes} type="button" aria-pressed={countdownMinutes === minutes} onClick={() => onMinutesChange(minutes)}>{minutes}m</button>)}</div>
           <div className="countdown-custom"><label>Minutes<input type="number" aria-label="Countdown minutes" min={1} max={1440} step={1} value={Number.isFinite(countdownMinutes) ? countdownMinutes : ""} onChange={event => onMinutesChange(event.target.value === "" ? NaN : Number(event.target.value))} /></label>
-            <button type="button" className="countdown-sound" aria-pressed={soundEnabled} onClick={() => onSoundChange(!soundEnabled)}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}Sound {soundEnabled ? "on" : "off"}</button>
-            {soundEnabled && <button type="button" className="countdown-preview" onClick={onPreviewSound}>Test sound</button>}
+
           </div>
         </div>}
+        {mode !== "stopwatch" && <div className="countdown-custom">            <button type="button" className="countdown-sound" aria-pressed={soundEnabled} onClick={() => onSoundChange(!soundEnabled)}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}Sound {soundEnabled ? "on" : "off"}</button>
+            {soundEnabled && <button type="button" className="countdown-preview" onClick={onPreviewSound}>Test sound</button>}</div>}
       </div>}
+      {timer?.mode === "pomodoro" && timer.pomodoro && <p className="pomodoro-phase" role="status">{timer.countdownCompleted ? "Ready to review" : timer.pomodoro.phase === "break" ? "Break" : "Focus"} · Session {timer.pomodoro.session} of {timer.pomodoro.totalSessions}</p>}
       <div
         className="timer-clock"
         role="timer"
@@ -124,14 +131,14 @@ export default function TimerCard({
           onClick={() => onStart()}
         >
           <Play size={16} fill="currentColor" />
-          {mode === "countdown" ? "Start countdown" : "Begin a session"}{" "}
+          {mode === "pomodoro" ? "Start Pomodoro" : mode === "countdown" ? "Start countdown" : "Begin a session"}{" "}
           <span>
             <ArrowUpRight size={16} />
           </span>
         </button>
       )}
       <div className="focus-bottom">
-        <ArrowDown size={12} /> {timer?.countdownCompleted ? "Countdown complete. Save or reset your session." : target !== null ? "Stops at zero. Focused time excludes pauses." : active ? "Focus linked to this task." : projectName ? "Focus linked to this project." : "No target. Just intentional time."}
+        <ArrowDown size={12} /> {timer?.countdownCompleted ? timer.mode === "pomodoro" ? "Choose which focus logs to save." : "Countdown complete. Save or reset your session." : timer?.mode === "pomodoro" ? "Focus and breaks alternate automatically. Break time is not logged." : mode === "pomodoro" ? "Automatic focus and breaks. Save your chosen focus logs at the end." : target !== null ? "Stops at zero. Focused time excludes pauses." : active ? "Focus linked to this task." : projectName ? "Focus linked to this project." : "No target. Just intentional time."}
       </div>
       </div>
     </section>

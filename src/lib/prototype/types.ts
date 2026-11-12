@@ -123,8 +123,12 @@ export interface PrototypeState {
   challenges: Challenge[];
   completions: ChallengeCompletion[];
 }
+export interface PomodoroSettings { focusSeconds: number; breakSeconds: number; totalSessions: number }
+export interface PomodoroLog { id: string; session: number; startedAt: string; endedAt: string; durationSeconds: number; completed: boolean }
+export interface PomodoroState extends PomodoroSettings { phase: "focus" | "break"; session: number; phaseStartedAt: string; logs: PomodoroLog[] }
 export interface ActiveTimer {
-  mode?: "stopwatch" | "countdown";
+  pomodoro?: PomodoroState;
+  mode?: "stopwatch" | "countdown" | "pomodoro";
   targetSeconds?: number;
   soundEnabled?: boolean;
   countdownCompleted?: boolean;

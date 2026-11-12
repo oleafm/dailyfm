@@ -3846,3 +3846,16 @@ h1 em {
 .activity-scope-filters .quiet-select { width: 100%; min-width: 0; height: 36px; padding-right: 30px; text-overflow: ellipsis; }
 .activity-card .activity-scope-filters + .contribution-chart { margin-top: 24px; }
 .activity-history-filters { flex-wrap: wrap; max-width: 100%; }
+
+.pomodoro-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.pomodoro-settings label { display: grid; gap: 7px; color: #bbb; font-size: 10px; }
+.pomodoro-settings input { width: 100%; min-width: 0; background: #222; color: white; border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 12px; }
+.focus-card > .pomodoro-phase { font-size: 12px; color: #ddd; text-align: center; margin-top: 18px; }
+.pomodoro-log-picker { border: 0; padding: 0; min-width: 0; }
+.pomodoro-log-picker legend { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.pomodoro-review-log { display: flex; gap: 12px; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 12px 0; }
+.session-finish-form .pomodoro-log-choice { display: flex; align-items: center; gap: 10px; font-size: 12px; min-width: 0; }
+.session-review-modal .session-finish-form label.pomodoro-log-choice input[type="checkbox"] { width: 16px; height: 16px; min-height: 16px; margin: 0; padding: 0; accent-color: #181818; flex-shrink: 0; }
+.pomodoro-log-choice small { display: block; color: #888; font-size: 10px; margin-top: 4px; }
+.session-review-modal .session-finish-form input.pomodoro-log-duration { flex: 0 0 100px; width: 100px; min-width: 90px; padding: 9px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.timer-mode-switch button { min-width: 0; }

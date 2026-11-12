@@ -1,6 +1,7 @@
 import { ActiveTimer, PrototypeState, Task, TaskStatus } from "./types";
 import { finishSession } from "./sessions";
 import { dateKey } from "./seed";
+import { savePomodoroLogs } from "./pomodoro";
 import { finishTimer, timerElapsed } from "./active-timer";
 
 export function taskStatus(task: Task): TaskStatus {
@@ -18,8 +19,11 @@ export function changeTaskStatus(state: PrototypeState, id: string, status: Task
   let next = state;
   if (status === "done" && timer?.taskId === id) {
     const seconds = timerElapsed(timer, now);
-    next = finishSession(state, finishTimer(timer, now), seconds,
-      { title: task.title, area: task.area, category: task.category, projectId: task.projectId, taskId: id, note: "" }, makeId);
+    const details = { title: task.title, area: task.area, category: task.category, projectId: task.projectId, taskId: id, note: "" };
+    const finished = finishTimer(timer, now);
+    next = finished.mode === "pomodoro" && finished.pomodoro
+      ? finished.pomodoro.logs.length ? savePomodoroLogs(state, finished, { ...details, pomodoroLogs: finished.pomodoro.logs.map(log => ({ id: log.id, durationSeconds: log.durationSeconds })) }, makeId) : state
+      : finishSession(state, finished, seconds, details, makeId);
   }
   const recordedAt = new Date(now).toISOString();
   return { ...next,

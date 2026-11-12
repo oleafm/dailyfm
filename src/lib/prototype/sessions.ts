@@ -3,6 +3,7 @@ import { dateKey } from "./seed";
 import { projectArea } from "./projects";
 
 export interface SessionDetails {
+  pomodoroLogs?: { id: string; durationSeconds: number }[];
   title: string;
   area: Area;
   category: string;

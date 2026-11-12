@@ -1,5 +1,5 @@
 "use client";
-import { countdownTarget } from "@/lib/prototype/active-timer";
+import { timerDisplay } from "@/lib/prototype/active-timer";
 import { useState } from "react";
 import { ArrowRight, Archive, Play, Check, Plus } from "lucide-react";
 import { ActiveTimer, PrototypeState, Task, TaskNote, TaskStatus, TimerSession } from "@/lib/prototype/types";
@@ -52,7 +52,7 @@ function TaskDetail(props: Props & { task: Task }) {
       <button className="primary-button" onClick={() => active && timer?.countdownCompleted ? props.onFinish() : active && timer?.runningSince !== null ? props.onPause() : props.onFocus(task.id)}><Play size={14} />{active ? timer?.countdownCompleted ? "Review session" : timer?.runningSince !== null ? "Pause focus" : "Resume focus" : "Start focus"}</button>
       {active && <button className="secondary-button" onClick={props.onFinish}>Finish</button>}
     </div>}
-    {active && <p className="task-active-timer" role="status">{timer?.countdownCompleted ? "Countdown complete" : timer?.runningSince !== null ? "Focus in progress" : "Focus paused"} · {clock(timer && countdownTarget(timer) !== null ? Math.max(0, countdownTarget(timer)! - seconds) : seconds)}<span>Marking this task Done will save this session automatically.</span></p>}
+    {active && <p className="task-active-timer" role="status">{timer?.countdownCompleted ? "Ready to review" : timer?.mode === "pomodoro" && timer.pomodoro?.phase === "break" ? "Pomodoro break" : timer?.runningSince !== null ? "Focus in progress" : "Focus paused"} · {clock(timer ? timerDisplay(timer, Date.now()) : seconds)}<span>{timer?.mode === "pomodoro" ? "Marking this task Done opens the focus log review." : "Marking this task Done will save this session automatically."}</span></p>}
     <div className="task-stat-grid">{[[clock(history.seconds), "total focused time"], [String(history.sessions.length), "saved sessions"], [String(history.days), "days with focus"]].map(([value,label]) => <div className="card" key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
     <div className="task-workspace-grid">
       <section className="card">

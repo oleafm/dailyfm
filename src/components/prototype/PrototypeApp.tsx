@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { countdownTarget, finishTimer, timerDisplay, timerElapsed, TimerMode } from "@/lib/prototype/active-timer";
+import { advancePomodoro, pomodoroPhaseElapsed, savePomodoroLogs, validPomodoroSettings } from "@/lib/prototype/pomodoro";
 import { TimerChime } from "@/lib/prototype/timer-sound";
 import { User as AccountUser } from "@supabase/supabase-js";
 import AccountGate from "../account/AccountGate";
@@ -136,6 +137,9 @@ function Workspace({
     [now, setNow] = useState(Date.now());
   const [timerMode, setTimerMode] = useState<TimerMode>("stopwatch");
   const [countdownMinutes, setCountdownMinutes] = useState(25);
+  const [pomodoroSettings, setPomodoroSettings] = useState({ focusSeconds: 1500, breakSeconds: 300, totalSessions: 4 });
+  const [pendingTaskCompletion, setPendingTaskCompletion] = useState<string | null>(null);
+  const notifiedPomodoro = useRef<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const chime = useRef<TimerChime | null>(null);
   const notifiedCountdown = useRef<string | null>(null);
@@ -162,7 +166,8 @@ function Workspace({
     try {
       const preferences = JSON.parse(localStorage.getItem(`${timerKey}:preferences`) || "null");
       if (preferences) {
-        setTimerMode(preferences.mode === "countdown" ? "countdown" : "stopwatch");
+        setTimerMode(preferences.mode === "pomodoro" ? "pomodoro" : preferences.mode === "countdown" ? "countdown" : "stopwatch");
+        if (preferences.pomodoro && validPomodoroSettings(preferences.pomodoro)) setPomodoroSettings(preferences.pomodoro);
         if (Number.isInteger(preferences.minutes) && preferences.minutes >= 1 && preferences.minutes <= 1440) setCountdownMinutes(preferences.minutes);
         setSoundEnabled(preferences.sound !== false);
       }
@@ -174,7 +179,7 @@ function Workspace({
         (stored.runningSince === null ||
           typeof stored.runningSince === "number")
       )
-        setTimer(stored);
+        { if (stored.mode !== "pomodoro" || (stored.pomodoro && validPomodoroSettings(stored.pomodoro) && Array.isArray(stored.pomodoro.logs))) setTimer(stored); }
     } catch {
       /* A fresh timer is fine. */
     }
@@ -212,8 +217,8 @@ function Workspace({
   }, [timer, ready, timerKey]);
   useEffect(() => {
     if (!ready) return;
-    try { localStorage.setItem(`${timerKey}:preferences`, JSON.stringify({ mode: timerMode, minutes: countdownMinutes, sound: soundEnabled })); } catch { /* Timer controls still work without saved preferences. */ }
-  }, [ready, timerKey, timerMode, countdownMinutes, soundEnabled]);
+    try { localStorage.setItem(`${timerKey}:preferences`, JSON.stringify({ mode: timerMode, minutes: countdownMinutes, sound: soundEnabled, pomodoro: pomodoroSettings })); } catch { /* Timer controls still work without saved preferences. */ }
+  }, [ready, timerKey, timerMode, countdownMinutes, soundEnabled, pomodoroSettings]);
   useEffect(() => {
     if (!timer?.runningSince) return;
     const update = () => setNow(Date.now());
@@ -268,6 +273,22 @@ function Workspace({
     const target = countdownTarget(timer);
     if (target !== null && timerElapsed(timer, now) >= target) completeCountdown(timer, now);
   }, [timer, now, ready]);
+  function announcePomodoroPhase(current: ActiveTimer) {
+    const p = current.pomodoro!;
+    const key = `${current.startedAt}:${p.phase}:${p.session}:${current.countdownCompleted}`;
+    if (notifiedPomodoro.current === key) return;
+    notifiedPomodoro.current = key;
+    const sounded = current.soundEnabled !== false && chime.current?.play();
+    const message = current.countdownCompleted ? "Pomodoro finished. Choose which focus logs to save." : p.phase === "break" ? "Focus complete. Your break has started." : `Break complete. Focus session ${p.session} has started.`;
+    setToast(message + (current.soundEnabled !== false && !sounded ? " Sound is unavailable in this browser." : ""));
+  }
+  useEffect(() => {
+    if (!ready || timer?.mode !== "pomodoro" || !timer.pomodoro || timer.runningSince === null || timer.countdownCompleted) return;
+    const next = advancePomodoro(timer, now);
+    if (next === timer) return;
+    setTimer(next); announcePomodoroPhase(next);
+    if (next.countdownCompleted) setDialog({ type: "session" });
+  }, [timer, now, ready]);
   const activeTask = state.tasks.find((t) => t.id === timer?.taskId);
   const activeProject = state.projects.find((project) => project.id === timer?.projectId);
   const todays = state.activities.filter((a) => a.date === today);
@@ -319,8 +340,9 @@ function Workspace({
   }
   function startTimer(id?: string, projectId?: string) {
     if (timer?.countdownCompleted) { setDialog({ type: "session" }); return; }
+    if (!timer && timerMode === "pomodoro" && !validPomodoroSettings(pomodoroSettings)) { setToast("Choose 1–180 focus minutes, 1–60 break minutes, and 1–12 sessions."); return; }
     if (!timer && timerMode === "countdown" && (!Number.isInteger(countdownMinutes) || countdownMinutes < 1 || countdownMinutes > 1440)) { setToast("Choose a countdown between 1 and 1,440 minutes."); return; }
-    if ((timer ? timer.mode === "countdown" && timer.soundEnabled !== false : timerMode === "countdown" && soundEnabled)) armSound();
+    if ((timer ? timer.mode !== "stopwatch" && timer.soundEnabled !== false : timerMode !== "stopwatch" && soundEnabled)) armSound();
     const selected = state.tasks.find((task) => task.id === id);
     if (selected?.completed || selected?.archivedAt) { setToast("Reopen or restore this task before starting focus."); return; }
 
@@ -339,6 +361,7 @@ function Workspace({
         ? { ...current, endedAt: undefined, runningSince: current.runningSince || time }
         : {
             mode: timerMode,
+            pomodoro: timerMode === "pomodoro" ? { ...pomodoroSettings, phase: "focus", session: 1, phaseStartedAt: new Date(time).toISOString(), logs: [] } : undefined,
             targetSeconds: timerMode === "countdown" ? countdownMinutes * 60 : undefined,
             soundEnabled,
             taskId: id,
@@ -365,6 +388,14 @@ function Workspace({
   }
   function pauseTimer() {
     const time = Date.now();
+    if (timer?.mode === "pomodoro" && timer.pomodoro) {
+      const next = advancePomodoro(timer, time);
+      if (next !== timer) announcePomodoroPhase(next);
+      setNow(time);
+      setTimer(next.countdownCompleted ? next : { ...next, elapsed: pomodoroPhaseElapsed(next, time), runningSince: null });
+      if (next.countdownCompleted) setDialog({ type: "session" });
+      return;
+    }
     if (timer && countdownTarget(timer) !== null && timerElapsed(timer, time) >= countdownTarget(timer)!) { completeCountdown(timer, time); return; }
     setNow(time);
     setTimer((current) =>
@@ -389,13 +420,18 @@ function Workspace({
     if (!timer) return;
     const measured = Math.max(1, seconds);
     const elapsed = details.durationSeconds ?? measured;
-    setState((current) => finishSession(current, timer, measured, details, uid));
+    setState((current) => {
+      const next = timer.mode === "pomodoro" ? savePomodoroLogs(current, timer, details, uid) : finishSession(current, timer, measured, details, uid);
+      return pendingTaskCompletion ? changeTaskStatus(next, pendingTaskCompletion, "done", null, Date.now(), uid) : next;
+    });
+    setPendingTaskCompletion(null);
     setTimer(null);
     announce(account ? `Recorded ${clock(elapsed)} of focus. Saving to your account…` : `Saved ${clock(elapsed)} of focus.`, "session");
   }
   function setTaskStatus(id: string, status: TaskStatus) {
     const task = state.tasks.find((task) => task.id === id);
     if (!task || taskStatus(task) === status) return;
+    if (status === "done" && timer?.taskId === id && timer.mode === "pomodoro") { setPendingTaskCompletion(id); stopTimer(); return; }
     const at = Date.now();
     setState((current) => changeTaskStatus(current, id, status, timer, at, uid));
     if (status === "done" && timer?.taskId === id) { setTimer(null); close(); }
@@ -662,6 +698,7 @@ function Workspace({
                   <TimerCard
                     clockRef={clockRef}
                     mode={timerMode} onModeChange={setTimerMode}
+                    pomodoroSettings={pomodoroSettings} onPomodoroChange={setPomodoroSettings} remainingSeconds={displayedSeconds}
                     countdownMinutes={countdownMinutes} onMinutesChange={setCountdownMinutes}
                     soundEnabled={soundEnabled} onSoundChange={setSoundEnabled} onPreviewSound={previewSound}
                     tasks={state.tasks}
@@ -809,8 +846,8 @@ function Workspace({
             }}
           >
             <span className={timer.runningSince ? "live-dot" : "paused-dot"} />
-            {activeTask?.title || activeProject?.name || "Focus session"}
-            <strong aria-label={timer.mode === "countdown" ? "Time remaining" : "Time elapsed"}>{clock(displayedSeconds)}</strong>
+            {timer.mode === "pomodoro" && timer.pomodoro ? `${timer.pomodoro.phase === "break" ? "Break" : "Focus"} · ${timer.pomodoro.session}/${timer.pomodoro.totalSessions}` : activeTask?.title || activeProject?.name || "Focus session"}
+            <strong aria-label={timer.mode !== "stopwatch" ? "Time remaining" : "Time elapsed"}>{clock(displayedSeconds)}</strong>
           </button>
           {!timer.countdownCompleted && <button
             className="icon-button"
@@ -1027,7 +1064,7 @@ function Workspace({
             projects={state.projects}
             initialArea={area}
             onSave={saveSession}
-            onReset={() => { setTimer(null); announce("Session reset. No time was saved.", false); }}
+            onReset={() => { setPendingTaskCompletion(null); setTimer(null); announce("Session reset. No time was saved.", false); }}
           />
         </Modal>
       )}

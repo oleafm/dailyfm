@@ -11,6 +11,10 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
   timer: ActiveTimer; seconds: number; tasks: Task[]; projects: Project[]; initialArea: Area;
   onSave: (details: SessionDetails) => void; onReset: () => void;
 }) {
+  const pomodoroLogs = timer.mode === "pomodoro" ? timer.pomodoro?.logs || [] : null;
+  const [selectedLogs, setSelectedLogs] = useState(() => pomodoroLogs?.map(log => log.id) || []);
+  const [logDurations, setLogDurations] = useState<Record<string,string>>(() => Object.fromEntries(pomodoroLogs?.map(log => [log.id, clock(log.durationSeconds)]) || []));
+  const selectedFocusSeconds = (pomodoroLogs || []).filter(log => selectedLogs.includes(log.id)).reduce((sum,log) => sum + (parseFocusedDuration(logDurations[log.id]) || 0),0);
   const original = tasks.find((task) => task.id === timer.taskId);
   const originalProject = projects.find((project) => project.id === (original?.projectId || timer.projectId));
   const [area, setArea] = useState<Area>(original?.area || (originalProject && projectArea(originalProject)) || initialArea);
@@ -55,24 +59,33 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
   </>;
   return <form className="form session-finish-form" onSubmit={(event) => {
     event.preventDefault();
-    const duration = parseFocusedDuration(durationText);
+    const duration = pomodoroLogs ? selectedFocusSeconds : parseFocusedDuration(durationText);
+    if (pomodoroLogs && (!selectedLogs.length || pomodoroLogs.some(log => selectedLogs.includes(log.id) && (parseFocusedDuration(logDurations[log.id]) === null || parseFocusedDuration(logDurations[log.id])! > log.durationSeconds)))) { setError("Select focus logs and use hh:mm:ss within each log’s recorded duration."); return; }
     if (duration === null || duration > recordedSessionSeconds(timer)) { setEditingTime(true);setError("Use hh:mm:ss between 00:00:01 and the recorded session length.");return; }
     if (!title.trim()) { setError("Give this session a short name.");return; }
     if (projectId === "__new" && !projectName.trim()) { setError("Give the new project a name.");return; }
     setError("");
     onSave({ title: title.trim(), area, category, durationSeconds: duration,
+      pomodoroLogs: pomodoroLogs ? selectedLogs.map(id => ({ id, durationSeconds: parseFocusedDuration(logDurations[id])! })) : undefined,
       taskId: area === "do" && selectedTaskId && selectedTaskId !== "__new" ? selectedTaskId : undefined,
       createTask: area === "do" && selectedTaskId === "__new", projectId: projectId !== "__new" ? projectId || undefined : undefined,
       newProjectName: projectId === "__new" ? projectName.trim() : undefined, note });
   }}>
     <div className="session-receipt">
-      <div className="session-time-tools"><button type="button" className="icon-button" title="Edit focused time" aria-label="Edit focused time" aria-pressed={editingTime} onClick={() => {setEditingTime(!editingTime);setConfirmReset(false);}}><Pencil size={15} /></button><button type="button" className="icon-button" title="Reset timer" aria-label="Reset timer" aria-expanded={confirmReset} onClick={() => setConfirmReset(!confirmReset)}><RotateCcw size={15} /></button></div>
+      <div className="session-time-tools">{!pomodoroLogs && <button type="button" className="icon-button" title="Edit focused time" aria-label="Edit focused time" aria-pressed={editingTime} onClick={() => {setEditingTime(!editingTime);setConfirmReset(false);}}><Pencil size={15} /></button>}<button type="button" className="icon-button" title="Reset timer" aria-label="Reset timer" aria-expanded={confirmReset} onClick={() => setConfirmReset(!confirmReset)}><RotateCcw size={15} /></button></div>
       <span className="session-date">{new Date(timer.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-      {editingTime ? <input ref={timeInput} className="session-duration-input" aria-label="Focused duration" value={durationText} onChange={(event) => {setDurationText(event.target.value);setError("");}} placeholder="hh:mm:ss" autoComplete="off" spellCheck={false} /> : <strong>{durationText}</strong>}
+      {pomodoroLogs ? <strong>{clock(selectedFocusSeconds)}</strong> : editingTime ? <input ref={timeInput} className="session-duration-input" aria-label="Focused duration" value={durationText} onChange={(event) => {setDurationText(event.target.value);setError("");}} placeholder="hh:mm:ss" autoComplete="off" spellCheck={false} /> : <strong>{durationText}</strong>}
       <span>{displayTime(timer.startedAt)}{timer.endedAt ? ` — ${displayTime(timer.endedAt)}` : ""}</span>
-      <p className="form-hint">{editingTime ? "Edit focused time · hh:mm:ss" : "Focused time excludes pauses."}</p>
+      <p className="form-hint">{pomodoroLogs ? "Selected focus time. Breaks and pauses are excluded." : editingTime ? "Edit focused time · hh:mm:ss" : "Focused time excludes pauses."}</p>
       {confirmReset && <div className="session-reset-confirm" role="group" aria-label="Confirm timer reset"><p>Reset this session? No time will be saved.</p><div><button className="secondary-button" type="button" onClick={onReset}>Reset</button><button className="text-button" type="button" onClick={() => setConfirmReset(false)}>Keep session</button></div></div>}
     </div>
+    {pomodoroLogs && <fieldset className="pomodoro-log-picker"><legend>Choose focus logs to save</legend>
+      <p className="form-hint">Your project, task and note below apply to the selected logs.</p>
+      {pomodoroLogs.length ? pomodoroLogs.map(log => <div className="pomodoro-review-log" key={log.id}>
+        <label className="pomodoro-log-choice"><input type="checkbox" aria-label={`Save focus session ${log.session}`} checked={selectedLogs.includes(log.id)} onChange={event => setSelectedLogs(event.target.checked ? [...selectedLogs, log.id] : selectedLogs.filter(id => id !== log.id))} /><span>Focus session {log.session}{!log.completed && <small>Partial session</small>}<small>{new Date(log.startedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {displayTime(log.startedAt)} — {displayTime(log.endedAt)}</small></span></label>
+        <input aria-label={`Focus session ${log.session} duration`} className="pomodoro-log-duration" value={logDurations[log.id]} disabled={!selectedLogs.includes(log.id)} onChange={event => setLogDurations({ ...logDurations, [log.id]: event.target.value })} placeholder="hh:mm:ss" />
+      </div>) : <p className="form-hint">No focus time recorded yet. Reset to start a new Pomodoro.</p>}
+    </fieldset>}
     {assignmentFields}
     <details className="session-extra-details" open={detailsOpen} onToggle={(event) => setDetailsOpen(event.currentTarget.open)}>
       <summary>Add details <span className="optional">optional</span></summary>
@@ -86,6 +99,6 @@ export default function SessionFinishForm({ timer, seconds, tasks, projects, ini
       </div>
     </details>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="session-finish-actions"><button className="primary-button" type="submit">Save time <ArrowRight size={16} /></button></div>
+    <div className="session-finish-actions"><button className="primary-button" type="submit" disabled={!!pomodoroLogs && !selectedLogs.length}>{pomodoroLogs ? "Save selected logs" : "Save time"} <ArrowRight size={16} /></button></div>
   </form>;
 }

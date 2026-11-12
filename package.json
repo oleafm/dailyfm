@@ -15,6 +15,7 @@
     "test:tasks": "node --import tsx tests/tasks.test.ts",
     "test:activity": "node --import tsx tests/activity-history.test.ts && node --import tsx tests/activity-filters.test.ts",
     "test:projects": "node --import tsx tests/projects.test.ts",
+    "test:pomodoro": "node --import tsx tests/pomodoro.test.ts",
     "test:countdown": "node --import tsx tests/countdown.test.ts"
   },
   "dependencies": {
