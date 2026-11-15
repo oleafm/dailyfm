@@ -74,31 +74,31 @@ export default function ActivityGrid({
   if (nextMonth > 0 && nextMonth * (layout.width + geometry.gap) / columns < 18) monthLabels[0] = "";
   return (
     <section className="card activity-card" aria-label="Your activity history">
-      <div className="section-heading">
-        <div className="with-icon">
-          <span className="small-icon">
-            <Sprout size={18} />
-          </span>
-          <h2>Your days.</h2>
+      <div className="activity-history-heading">
+        <div className="activity-history-intro">
+          <div className="section-heading">
+            <div className="with-icon">
+              <span className="small-icon"><Sprout size={18} /></span>
+              <h2>Your days.</h2>
+            </div>
+          </div>
+          <p className="muted grid-description">Small things. Seen over time.</p>
         </div>
         <div className="activity-history-filters">
-          {!!years.length && <select aria-label="Activity grid year" className="quiet-select activity-year-select" value={selectedYear ?? "recent"} onChange={(event) => setYear(event.target.value === "recent" ? null : Number(event.target.value))}>
+          <label>Project<select aria-label="Activity grid project" className="quiet-select" value={filters.projectId} onChange={event => onFiltersChange({ ...filters, projectId: event.target.value })}>
+            <option value="">All projects</option>{projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
+          </select></label>
+          <label>Category<select aria-label="Activity grid category" className="quiet-select" value={filters.category} onChange={event => onFiltersChange({ ...filters, category: event.target.value })}>
+            <option value="">All categories</option>{categories.map(category => <option key={category} value={category}>{category}</option>)}
+          </select></label>
+          {!!years.length && <label>Year<select aria-label="Activity grid year" className="quiet-select activity-year-select" value={selectedYear ?? "recent"} onChange={(event) => setYear(event.target.value === "recent" ? null : Number(event.target.value))}>
             <option value="recent">Recent</option>{years.map((value) => <option key={value} value={value}>{value}</option>)}
-          </select>}
-          <select aria-label="Activity grid range" className="quiet-select" value={selectedYear === null ? weeks : "year"} onChange={(event) => { if (event.target.value === "year") return; chosenRange.current = true; setYear(null); setWeeks(Number(event.target.value)); }}>
+          </select></label>}
+          <label>Date range<select aria-label="Activity grid range" className="quiet-select" value={selectedYear === null ? weeks : "year"} onChange={(event) => { if (event.target.value === "year") return; chosenRange.current = true; setYear(null); setWeeks(Number(event.target.value)); }}>
             {selectedYear !== null && <option value="year">Full year</option>}
             <option value={52}>Last 52 weeks</option><option value={26}>Last 26 weeks</option><option value={16}>Last 16 weeks</option>
-          </select>
+          </select></label>
         </div>
-      </div>
-      <p className="muted grid-description">Small things. Seen over time.</p>
-      <div className="activity-scope-filters">
-        <label>Project<select aria-label="Activity grid project" className="quiet-select" value={filters.projectId} onChange={event => onFiltersChange({ ...filters, projectId: event.target.value })}>
-          <option value="">All projects</option>{projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
-        </select></label>
-        <label>Category<select aria-label="Activity grid category" className="quiet-select" value={filters.category} onChange={event => onFiltersChange({ ...filters, category: event.target.value })}>
-          <option value="">All categories</option>{categories.map(category => <option key={category} value={category}>{category}</option>)}
-        </select></label>
       </div>
       <div className="contribution-chart">
         <div className="day-labels" style={{ rowGap: layout.gap }}>

@@ -207,7 +207,7 @@ export function ActivityForm({
         />
       </label>
       <button className="primary-button" type="submit">
-        Keep this moment <ArrowRight size={16} />
+        Log an activity <ArrowRight size={16} />
       </button>
     </form>
   );

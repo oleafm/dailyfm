@@ -727,7 +727,7 @@ h1 em {
   justify-content: space-between;
 }
 .focus-top .eyebrow {
-  color: #999;
+  color: var(--accent);
   font-size: 8px;
   letter-spacing: 1.4px;
 }
@@ -757,7 +757,7 @@ h1 em {
   color: #fff;
 }
 .focus-card > p {
-  font-size: 11px;
+  font-size: 13px;
   color: #aaa;
   margin-top: 10px;
   line-height: 1.75;
@@ -839,7 +839,7 @@ h1 em {
   gap: 10px;
   width: 100%;
   padding: 13px 17px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   min-height: 44px;
 }
@@ -857,7 +857,8 @@ h1 em {
   gap: 5px;
   margin-top: 14px;
   color: #777;
-  font-size: 8px;
+  font-size: 10px;
+  line-height: 1.6;
 }
 .timer-actions {
   display: flex;
@@ -876,7 +877,7 @@ h1 em {
   align-items: center;
   justify-content: center;
   padding: 12px 15px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .stop-button:hover {
   background: #333;
@@ -985,6 +986,23 @@ h1 em {
 }
 .category-strip button span {
   font-size: 8px;
+}
+.activity-log-description {
+  color: #777;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 10px 0 16px;
+}
+.activity-log-card .section-heading {
+  margin-bottom: 0;
+}
+.activity-log-card .category-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 16px 0 0;
+  gap: 4px 8px;
+}
+.activity-log-card .category-strip button span {
+  font-size: 10px;
 }
 .reflection-card {
   border: 1px solid #ededed;
@@ -2726,7 +2744,7 @@ h1 em {
     letter-spacing: -1.3px;
   }
   .focus-card > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .timer-clock {
     font-size: 45px;
@@ -2741,14 +2759,14 @@ h1 em {
     padding: 6px 0;
   }
   .focus-button {
-    font-size: 12px;
+    font-size: 14px;
     padding: 14px 17px;
   }
   .focus-bottom {
-    font-size: 9px;
+    font-size: 11px;
   }
   .stop-button {
-    font-size: 12px;
+    font-size: 14px;
   }
   .second-row,
   .third-row {
@@ -3758,9 +3776,20 @@ h1 em {
 @media (max-width: 360px) { .session-review-modal .session-receipt strong, .session-review-modal .session-finish-form input.session-duration-input { font-size: 32px; } .session-review-modal .session-area-switch button { padding: 9px 12px; } .session-assignment-row { gap: 12px; } }
 
 /* Filter history within a stable calendar frame. */
-.activity-history-filters { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.activity-history-filters .quiet-select { width: 120px; }
-.activity-history-filters .activity-year-select { width: 82px; }
+.activity-history-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+.activity-history-intro { flex-shrink: 0; }
+.activity-history-intro .section-heading { margin-bottom: 12px; }
+.activity-history-filters { display: flex; align-items: end; gap: 12px; min-width: 0; }
+.activity-history-filters label { display: grid; gap: 7px; min-width: 0; flex: 1 1 120px; color: #777; font-size: 11px; }
+.activity-history-filters .quiet-select { width: 140px; max-width: 100%; min-width: 0; height: 36px; padding-right: 30px; text-overflow: ellipsis; }
+@media (max-width: 1200px) {
+  .activity-history-heading { flex-direction: column; gap: 18px; }
+  .activity-history-filters { width: 100%; }
+  .activity-history-filters .quiet-select { width: 100%; }
+}
+@media (max-width: 500px) {
+  .activity-history-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .activity-card .contribution-grid { grid-template-rows: repeat(7, minmax(0, 1fr)); }
 .activity-card .day-square { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; justify-self: center; align-self: center; }
 .activity-card .day-labels { padding-top: 24px; padding-bottom: 4px; }
@@ -3800,11 +3829,16 @@ h1 em {
 .project-overview-filters { width: fit-content; margin-bottom: 20px; }
 .project-log { padding: 20px 0; border-top: 1px solid var(--line); }
 .project-log-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
-.project-log-heading h3 { font-size: 14px; font-weight: 600; }
+.project-log-heading h3 { font-size: 16px; font-weight: 600; }
 .project-log-heading p, .project-log-note { font-size: 12px; color: #777; line-height: 1.7; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .project-log-heading > strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.project-log summary { cursor: pointer; font-size: 12px; margin-top: 12px; }
-.project-log .form { margin-top: 12px; }
+.project-note-edit { margin-top: 12px; padding: 8px 12px; min-height: 36px; }
+.project-note-form { margin-top: 16px; gap: 14px; }
+.project-note-form textarea { font-size: 15px; }
+.project-note-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.project-note-actions .primary-button { width: auto; margin: 0; padding: 10px 18px; justify-content: center; }
+.project-focus-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 18px 8px 8px; min-height: 46px; background: var(--ink); color: #fff; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.project-focus-button:hover { background: #303030; }
 /* Use spare timer height for the clock, keeping controls at the padded bottom. */
 .focus-card { display: flex; flex-direction: column; container-type: inline-size; }
 .focus-card .timer-clock { flex: 1; width: 100%; min-height: 135px; margin: 14px 0; font-size: clamp(36px, 14cqw, 76px); }
@@ -3855,16 +3889,11 @@ h1 em {
   .timer-comet { animation: none; transition: none; }
 }
 
-.activity-scope-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-.activity-scope-filters label { display: grid; gap: 7px; min-width: 0; color: #777; font-size: 11px; }
-.activity-scope-filters .quiet-select { width: 100%; min-width: 0; height: 36px; padding-right: 30px; text-overflow: ellipsis; }
-.activity-card .activity-scope-filters + .contribution-chart { margin-top: 24px; }
-.activity-history-filters { flex-wrap: wrap; max-width: 100%; }
 
 .pomodoro-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
 .pomodoro-settings label { display: grid; gap: 7px; color: #bbb; font-size: 10px; }
 .pomodoro-settings input { width: 100%; min-width: 0; background: #222; color: white; border: 1px solid #555; border-radius: 8px; padding: 8px; font-size: 12px; }
-.focus-card > .pomodoro-phase { font-size: 12px; color: #ddd; text-align: center; margin-top: 18px; }
+.focus-card > .pomodoro-phase { font-size: 14px; color: #ddd; text-align: center; margin-top: 18px; }
 .pomodoro-log-picker { border: 0; padding: 0; min-width: 0; }
 .pomodoro-log-picker legend { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
 .pomodoro-review-log { display: flex; gap: 12px; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 12px 0; }

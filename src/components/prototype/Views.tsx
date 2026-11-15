@@ -15,6 +15,7 @@ import {
   MapPin,
   Moon,
   Palette,
+  Pencil,
   Play,
   Plus,
   Sparkles,
@@ -163,34 +164,40 @@ export function PlanCard({
   onCategory: (category: string) => void;
   onOpen: (id: string) => void;
 }) {
+  if (area === "be") return (
+    <section className="card plan-card activity-log-card">
+      <SectionHeading title="Forgot to log an activity?" />
+      <p className="activity-log-description">Add something you’ve already done, today or on an earlier date.</p>
+      <button className="primary-button" onClick={onNew}>
+        <Plus size={16} aria-hidden="true" /> Log an activity
+      </button>
+      <div className="category-strip" aria-label="Log an activity by category">
+        {[
+          { label: "Move", icon: Footprints },
+          { label: "Learn", icon: BookOpen },
+          { label: "Reading", icon: BookOpen },
+          { label: "Create", icon: Palette },
+          { label: "Explore", icon: Compass },
+          { label: "People", icon: Users },
+          { label: "Reflect", icon: Feather },
+          { label: "Rest", icon: Moon },
+        ].map(({ label, icon: Icon }) => (
+          <button key={label} onClick={() => onCategory(label)}>
+            <Icon size={18} aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
   return (
     <section className="card plan-card">
       <SectionHeading
-        eyebrow={
-          area === "do" ? "A LITTLE INTENTION" : "A LIFE OUTSIDE THE LIST"
-        }
-        title={area === "do" ? "One small step." : "Make room for life."}
+        eyebrow="A LITTLE INTENTION"
+        title="One small step."
         action="Add a task"
         onAction={onNew}
       />
-      {area === "be" && (
-        <div className="category-strip">
-          {[
-            { label: "Move", icon: Footprints },
-            { label: "Learn", icon: BookOpen },
-            { label: "Create", icon: Palette },
-            { label: "Explore", icon: Compass },
-            { label: "People", icon: Users },
-            { label: "Reflect", icon: Feather },
-            { label: "Rest", icon: Moon },
-          ].map(({ label, icon: Icon }) => (
-            <button key={label} onClick={() => onCategory(label)}>
-              <Icon size={18} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      )}
       <TaskList
         key={area}
         initialLimit={5}
@@ -200,9 +207,7 @@ export function PlanCard({
         onOpen={onOpen}
       />
       <p className="card-footnote">
-        {area === "do"
-          ? "A plan is an invitation. You can change your mind."
-          : "Rest counts. Joy counts. Time with people counts."}
+        A plan is an invitation. You can change your mind.
       </p>
     </section>
   );
@@ -274,6 +279,27 @@ export function ChallengeTeaser({
     </button>
   );
 }
+function ProjectLogNote({ note, onSave }: { note?: string; onSave: (note: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  return editing ? (
+    <form className="form project-note-form" onSubmit={event => {
+      event.preventDefault();
+      onSave(String(new FormData(event.currentTarget).get("note") || ""));
+      setEditing(false);
+    }}>
+      <label>Note<textarea name="note" defaultValue={note} maxLength={1000} rows={2} autoFocus /></label>
+      <div className="project-note-actions">
+        <button className="primary-button" type="submit">Save note</button>
+        <button className="secondary-button" type="button" onClick={() => setEditing(false)}>Discard changes</button>
+      </div>
+    </form>
+  ) : (
+    <button className="project-note-edit secondary-button" onClick={() => setEditing(true)}>
+      <Pencil size={14} aria-hidden="true" />{note ? "Edit note" : "Add a note"}
+    </button>
+  );
+}
+
 export function ProjectsView({
   state,
   area,
@@ -345,7 +371,7 @@ export function ProjectsView({
           </h1>
           <p>{project.description}</p></div>
           <div className="project-header-actions">
-            {!project.completedAt && <button className="secondary-button" onClick={() => onProjectFocus(project.id)}><Play size={15} />Start project focus</button>}
+            {!project.completedAt && <button className="project-focus-button" onClick={() => onProjectFocus(project.id)}><span className="sidebar-focus-play"><Play size={15} aria-hidden="true" /></span>Start project focus</button>}
             <button className="secondary-button" disabled={!project.completedAt && activeTimerProject === project.id} title={activeTimerProject === project.id ? "Save or reset the current timer before completing this project" : undefined} onClick={() => onCompleteProject(project.id, !project.completedAt)}>{project.completedAt ? "Reopen project" : "Complete project"}</button>
           </div>
         </div>
@@ -367,7 +393,7 @@ export function ProjectsView({
           {logs.length ? <>{(allLogs ? logs : logs.slice(0, 10)).map(session => <article className="project-log" key={session.id}>
             <div className="project-log-heading"><div><h3>{session.title || project.name}</h3><p>{prettyDate(session.date)} · {displayTime(session.startedAt)}{session.endedAt ? ` — ${displayTime(session.endedAt)}` : " · End time not recorded"}</p></div><strong>{clock(session.durationSeconds)}</strong></div>
             {session.note && <p className="project-log-note">{session.note}</p>}
-            <details><summary>{session.note ? "Edit note" : "Add a note"}</summary><form className="form" onSubmit={event => {event.preventDefault();const form = event.currentTarget;onSessionNote(project.id,session.id,String(new FormData(form).get("note") || ""));form.closest("details")?.removeAttribute("open");}}><label>Note<textarea key={session.note} name="note" defaultValue={session.note} maxLength={1000} rows={2} /></label><button className="secondary-button" type="submit">Save note</button></form></details>
+            <ProjectLogNote note={session.note} onSave={note => onSessionNote(project.id, session.id, note)} />
           </article>)}{logs.length > 10 && <button className="text-button" onClick={() => setAllLogs(!allLogs)}>{allLogs ? "Show less" : "View all logs"}</button>}</> : <Empty>Start a project focus session. Your time and notes will appear here.</Empty>}
         </section> : <div className="detail-grid project-workspace">
           <section className="card project-tasks">

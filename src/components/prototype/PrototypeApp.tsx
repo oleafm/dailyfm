@@ -720,7 +720,7 @@ function Workspace({
                     onToggle={toggleTask}
                     onFocus={focusTask}
                     onOpen={openTask}
-                    onNew={() => setDialog({ type: "task" })}
+                    onNew={() => setDialog({ type: area === "be" ? "activity" : "task" })}
                     onCategory={(category) =>
                       setDialog({ type: "activity", category })
                     }
